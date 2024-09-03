@@ -7,6 +7,9 @@ import { LoginScene } from './bot/scenes/Login.scene';
 import { AuthGuard } from './user/decorators/Auth.guard';
 import { session } from 'telegraf/session';
 import { RolesGuard } from './user/decorators/Roles.guard';
+import { RegisterScene } from './bot/scenes/Register.scene';
+import { BotAdminApproveService } from './bot/admin/bot.admin_approve.service';
+import { BotHelpService } from './bot/bot.help.service';
 
 @Module({
   imports: [
@@ -18,10 +21,16 @@ import { RolesGuard } from './user/decorators/Roles.guard';
   providers: [
     PrismaService,
     UserService,
+    // Bot Services
     BotService,
-    LoginScene,
+    BotAdminApproveService,
+    BotHelpService,
+    // Guards
     AuthGuard,
     RolesGuard,
+    // Scenes
+    RegisterScene,
+    LoginScene,
   ],
 })
 export class AppModule {}

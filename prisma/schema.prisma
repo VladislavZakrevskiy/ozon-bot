@@ -3,27 +3,48 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-user_id String @id @unique @default(uuid())
-  login String @unique
-  password String
-  phone_number String
-  first_name String
-  last_name String
-  post String
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  tg_chat_id     Int
+  login          String        @unique // почта
+  password       String
+  phone_number   String
+  first_name     String
+  last_name      String
+  post           String
   employee_level EmployeeLevel
+  money          Int
+  isApproved     Boolean
 
   @@map("users")
 }
 
-enum EmployeeLevel {
-  EmployeeLevel_1
-  EmployeeLevel_2
-  EmployeeLevel_3
-  EmployeeLevel_4
+model Order {
+  id String @id @default(uuid()) @map("_id") @db.ObjectId
+
+  @@map("orders")
 }
 
+model Return_Orders {
+  id String @id @default(uuid()) @map("_id") @db.ObjectId
+
+  @@map("return_orders")
+}
+
+enum EmployeeLevel {
+  SUPER_ADMIN
+  ADMIN
+  BOSS
+  EMPLOYEE
+  ENEMY
+}
+
+enum OrderProcess {
+  DONE
+  IN_WORK
+  FREE
+}

@@ -12,7 +12,7 @@ export class LoginScene {
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SessionSceneContext) {
-    await ctx.reply('Пожалуйста, введите ваш логин:');
+    await ctx.reply('Пожалуйста, введите вашу почту:');
     ctx.scene.session.state = {};
   }
 
@@ -32,9 +32,10 @@ export class LoginScene {
     } else {
       const password = ctx.text;
 
+      console.log(state.login, password);
       const user = await this.userService.validateUser(state.login, password);
       if (user) {
-        ctx.session.user_id = user.user_id;
+        ctx.session.user_id = user.id;
         ctx.session.user = user;
         await ctx.reply('Вы успешно авторизовались!');
         await ctx.scene.leave();
