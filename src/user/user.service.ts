@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EmployeeLevel, Prisma, User } from '@prisma/client';
+import { EmployeeLevel, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { compareSync } from 'bcrypt';
 import { RegisterDto } from './dto/registerDto';
@@ -8,6 +8,7 @@ import { RegisterDto } from './dto/registerDto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  // Auth operations
   async registerUser(registerData: RegisterDto) {
     const user = await this.prisma.user.create({
       data: {
@@ -26,7 +27,6 @@ export class UserService {
     const candidate = await this.prisma.user.findUnique({
       where: { login },
     });
-    console.log(candidate, compareSync(String(password), candidate.password));
 
     if (candidate && compareSync(password, candidate.password)) {
       return candidate;
@@ -40,7 +40,7 @@ export class UserService {
     });
   }
 
-  async updateUser(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+  async updateUser(id: string, data: Partial<Omit<User, 'id'>>): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data,
@@ -54,16 +54,31 @@ export class UserService {
   }
 
   // Find
-  async findUserByRole(role: EmployeeLevel) {
+  async findUserByRole(
+    role: EmployeeLevel | EmployeeLevel[],
+    withOrders: boolean = false,
+  ) {
     const users = await this.prisma.user.findMany({
-      where: { employee_level: role },
+      where: { employee_level: typeof role === 'object' ? { in: role } : role },
+      include: { orders: withOrders },
     });
 
     return users;
   }
 
-  async findUserByLogin(login: string) {
-    const user = await this.prisma.user.findUnique({ where: { login } });
+  async findUserByLogin(login: string, withOrders: boolean = false) {
+    const user = await this.prisma.user.findUnique({
+      where: { login },
+      include: { orders: withOrders },
+    });
+    return user;
+  }
+
+  async findUserById(id: string, withOrders: boolean = false) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { orders: withOrders },
+    });
     return user;
   }
 }

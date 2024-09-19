@@ -9,7 +9,8 @@ datasource db {
 
 model User {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  tg_chat_id     Int
+  tg_chat_id     Int           @unique
+  tg_user_id     Int           @unique
   login          String        @unique // почта
   password       String
   phone_number   String
@@ -19,20 +20,33 @@ model User {
   employee_level EmployeeLevel
   money          Int
   isApproved     Boolean
+  orders         Order[]
 
   @@map("users")
 }
 
 model Order {
-  id String @id @default(uuid()) @map("_id") @db.ObjectId
+  id                   String       @id @default(uuid()) @map("_id") @db.ObjectId
+  ozon_id              String       @unique
+  product_id           String       @unique
+  offer_id             String       @unique
+  name                 String
+  price                Int
+  old_price            Int?
+  total_discount_value Int?
+  actions              String[]
+  is_express           Boolean
+  currency_code        CurrencyCode
+  quantity             Int
+  sku                  Int
+  proccess             OrderProcess
+  date                 DateTime
+  user                 User?        @relation(fields: [user_id], references: [id])
+  user_id              String?      @db.ObjectId
+  is_send              Boolean?
+  image_urls           String[]
 
   @@map("orders")
-}
-
-model Return_Orders {
-  id String @id @default(uuid()) @map("_id") @db.ObjectId
-
-  @@map("return_orders")
 }
 
 enum EmployeeLevel {
@@ -47,4 +61,14 @@ enum OrderProcess {
   DONE
   IN_WORK
   FREE
+  RETURN
+}
+
+enum CurrencyCode {
+  RUB
+  BYN
+  KZT
+  USD
+  EUR
+  CNY
 }

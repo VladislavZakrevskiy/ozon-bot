@@ -5,6 +5,7 @@ import { Scenes as ScenesEnum } from '../types/Scenes';
 import { SessionSceneContext } from '../types/Scene';
 import { UserService } from 'src/user/user.service';
 import { EmployeeLevel } from '@prisma/client';
+import { hashSync } from 'bcrypt';
 
 @Injectable()
 @Scene(ScenesEnum.REGISTER)
@@ -45,29 +46,35 @@ export class RegisterScene {
         first_name: state.name.split(' ')?.[0] || 'Имя не указано',
         last_name: state.name.split(' ')?.[1] || 'Фамилия не указана',
         login: state.login,
-        password: state.password,
+        password: hashSync(state.password, 7),
         phone_number: phone_number || '',
         tg_chat_id: ctx.message.chat.id,
+        tg_user_id: ctx.from.id,
       });
 
       await ctx.reply(
         'Регистрация успешно завершена! Ожидайте одобрения админом!',
       );
 
-      const super_admin = await this.userService.findUserByRole(
-        EmployeeLevel.SUPER_ADMIN,
-      );
+      const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
+      const photo_file_id = (
+        await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1)
+      ).photos[0][0].file_id;
+      const photo_url = await ctx.telegram.getFileLink(photo_file_id);
 
-      await ctx.telegram.sendMessage(
-        Number(super_admin[0].tg_chat_id),
-        `Подтвердите регистрацию! Выберите роль пользователя:
+      await ctx.telegram.sendPhoto(
+        Number(boss[0].tg_chat_id),
+        {
+          url: photo_url.toString(),
+        },
+        {
+          caption: `Подтвердите регистрацию! Выберите роль пользователя:
 Имя: ${user.first_name} ${user.last_name}
 Логин: ${user.login}
 Номер телефона: ${user.phone_number || 'Нет'}
 Телеграм ник: ${ctx.from.username || 'Нет'}
 Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name}
         `,
-        {
           reply_markup: {
             inline_keyboard: [
               [{ text: 'Админ', callback_data: 'admin' }],

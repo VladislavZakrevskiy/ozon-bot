@@ -32,7 +32,6 @@ export class LoginScene {
     } else {
       const password = ctx.text;
 
-      console.log(state.login, password);
       const user = await this.userService.validateUser(state.login, password);
       if (user) {
         ctx.session.user_id = user.id;

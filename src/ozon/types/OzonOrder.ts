@@ -16,17 +16,6 @@ export interface Cancellation {
   cancellation_initiator: string;
 }
 
-export interface Product {
-  price: string | number;
-  currency_code: string;
-  offer_id: string;
-  name: string;
-  sku: number;
-  quantity: number;
-  products_requiring_jw_uin: string;
-  mandatory_mark: any[];
-}
-
 export interface Barcode {
   upper_barcode: string;
   lower_barcode: string;
@@ -62,6 +51,18 @@ export interface Item_service {
 }
 
 export interface Product {
+  product_id: number;
+  price: string | number;
+  currency_code: string;
+  offer_id: string;
+  name: string;
+  sku: number;
+  quantity: number;
+  products_requiring_jw_uin: string;
+  mandatory_mark: any[];
+}
+
+export interface Product {
   commission_amount: number;
   commission_percent: number;
   payout: number;
@@ -75,6 +76,28 @@ export interface Product {
   quantity: number;
   client_price: string;
   item_services: Item_service;
+}
+
+export interface Posting {
+  posting_number: string;
+  order_id: number;
+  order_number: string;
+  status: string;
+  delivery_method: Delivery_method;
+  tracking_number: string;
+  tpl_integration_type: string;
+  in_process_at: string;
+  shipment_date: string;
+  delivering_date?: any;
+  cancellation: Cancellation;
+  customer?: any;
+  products: Product[];
+  addressee?: any;
+  barcodes: Barcode;
+  analytics_data: Analytics_data;
+  financial_data: Financial_data;
+  is_express: boolean;
+  requirements: Requirement;
 }
 
 export interface Posting_service {
@@ -100,28 +123,6 @@ export interface Requirement {
   products_requiring_gtd: any[];
   products_requiring_country: any[];
   products_requiring_jwn: any[];
-}
-
-export interface Posting {
-  posting_number: string;
-  order_id: number;
-  order_number: string;
-  status: string;
-  delivery_method: Delivery_method;
-  tracking_number: string;
-  tpl_integration_type: string;
-  in_process_at: string;
-  shipment_date: string;
-  delivering_date?: any;
-  cancellation: Cancellation;
-  customer?: any;
-  products: Product[];
-  addressee?: any;
-  barcodes: Barcode;
-  analytics_data: Analytics_data;
-  financial_data: Financial_data;
-  is_express: boolean;
-  requirements: Requirement;
 }
 
 export interface OzonResult {
