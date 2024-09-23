@@ -86,8 +86,11 @@ export class BotEmployeeService {
 
     const current_chat_id = ctx.chat.id;
     const current_order_id = ctx.text.split(' ')[4].split('\n')[0].slice(0, -1);
-    const current_message_id = this.redis.get(
+    const current_message_id = await this.redis.get(
       getRedisKeys('orderToDelete', current_order_id, current_chat_id),
+    );
+    const current_user_id = await this.redis.get(
+      getRedisKeys('user_id', current_chat_id),
     );
 
     const current_order = await this.orderService.findOneByParameter({
@@ -96,7 +99,7 @@ export class BotEmployeeService {
 
     await this.orderService.updateOrder(Number(current_order_id), {
       ...current_order,
-      user_id: ctx.session.user_id,
+      user_id: current_user_id,
       proccess: OrderProcess.IN_WORK,
     });
 
@@ -123,7 +126,7 @@ export class BotEmployeeService {
   async endOrder(@Ctx() ctx: SessionSceneContext) {
     const order_id = ctx.text.split(' ')[1];
     const order = await this.orderService.findOneByParameter({ id: order_id });
-    const user_id = ctx.session.user_id;
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
     const user = await this.userService.findUserById(user_id);
 
     // Update entities

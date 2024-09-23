@@ -5,12 +5,17 @@ import { SessionContext, SessionSceneContext } from 'src/bot/types/Scene';
 import { Scenes as ScenesEnum } from '../../types/Scenes';
 import { EmployeeLevel, User } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
+import { RedisService } from 'src/core/redis/redis.service';
+import { getRedisKeys } from 'src/core/redis/redisKeys';
 
 // Потом поменяю когда затесчу
 @Injectable()
 @Scene(ScenesEnum.PROFILE_BOSS)
 export class BossScene {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private redis: RedisService,
+  ) {}
 
   async getArrowMessage(
     ctx: SessionContext,
@@ -22,19 +27,26 @@ export class BossScene {
       EmployeeLevel.EMPLOYEE,
     ]);
 
-    if (!ctx.session.bossLastUserId) {
-      ctx.session.bossLastUserId = users[0].id;
+    const bossLastUserId = await this.redis.get(
+      getRedisKeys('bossLastUserId', ctx.chat.id),
+    );
+
+    if (!bossLastUserId) {
+      await this.redis.set(
+        getRedisKeys('bossLastUserId', ctx.chat.id),
+        users[0].id,
+      );
     } else {
       const next_index =
-        (users.findIndex(({ id }) => id === ctx.session.bossLastUserId) + 1) %
-        users.length;
+        (users.findIndex(({ id }) => id == bossLastUserId) + 1) % users.length;
 
-      ctx.session.bossLastUserId = users[next_index].id;
+      await this.redis.set(
+        getRedisKeys('bossLastUserId', ctx.chat.id),
+        users[next_index].id,
+      );
     }
 
-    const current_user = users.find(
-      ({ id }) => id === ctx.session.bossLastUserId,
-    );
+    const current_user = users.find(({ id }) => id == bossLastUserId);
     const user_index = users.findIndex(({ id }) => id === current_user.id);
 
     if (isFirst) {
@@ -79,19 +91,22 @@ export class BossScene {
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SessionSceneContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     this.getArrowMessage(ctx, user, true);
   }
 
   @Action('boss_back')
   async adminBackArrow(ctx: SessionContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     this.getArrowMessage(ctx, user);
   }
 
   @Action('boss_forward')
   async adminForwardArrow(ctx: SessionContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     this.getArrowMessage(ctx, user);
   }
 }

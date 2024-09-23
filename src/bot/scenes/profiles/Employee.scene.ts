@@ -7,6 +7,8 @@ import { Order, OrderProcess } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
 import { OrderService } from 'src/order/order.service';
 import { ListManager } from '../../templates/ListManager';
+import { RedisService } from 'src/core/redis/redis.service';
+import { getRedisKeys } from 'src/core/redis/redisKeys';
 
 @Injectable()
 @Scene(ScenesEnum.PROFILE_EMPLOYEE)
@@ -15,11 +17,13 @@ export class EmployeeScene {
     private readonly userService: UserService,
     private readonly orderService: OrderService,
     private readonly listManager: ListManager<Order>,
+    private redis: RedisService,
   ) {}
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SessionSceneContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     ctx.reply(getDefaultText(user), {
       reply_markup: {
         inline_keyboard: [
@@ -32,7 +36,8 @@ export class EmployeeScene {
 
   @Action('done_orders')
   async sendDoneOrders(@Ctx() ctx: SessionSceneContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     const orders = await this.orderService.findManyByParameter({
       order_by_date: 'desc',
       process: [OrderProcess.DONE],
@@ -49,7 +54,8 @@ export class EmployeeScene {
 
   @Action('work_orders')
   async sendWorkOrders(@Ctx() ctx: SessionSceneContext) {
-    const user = await this.userService.findUserById(ctx.session.user_id, true);
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
     const orders = await this.orderService.findManyByParameter({
       order_by_date: 'desc',
       process: [OrderProcess.IN_WORK],

@@ -5,20 +5,25 @@ import { EmployeeLevel } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { AuthGuard } from 'src/core/decorators/Auth.guard';
 import { Scenes } from './types/Scenes';
+import { RedisService } from 'src/core/redis/redis.service';
+import { getRedisKeys } from 'src/core/redis/redisKeys';
 
 @Injectable()
 @Update()
 export class BotProfileService {
   constructor(
     private prisma: PrismaService,
-    // private redis: RedisService,
+    private redis: RedisService,
   ) {}
 
   @Command('profile')
   @UseGuards(AuthGuard)
   async profileByRole(@Ctx() ctx: SessionSceneContext) {
+    const user_id = await this.redis.get<string>(
+      getRedisKeys('user_id', ctx.chat.id),
+    );
     const user = await this.prisma.user.findUnique({
-      where: { id: ctx.session.user_id },
+      where: { id: user_id },
       include: { orders: true },
     });
 

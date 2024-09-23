@@ -1,8 +1,10 @@
 import { SetMetadata } from '@nestjs/common';
-import { EmployeeLevel } from '@prisma/client';
+import { EmployeeLevel, User } from '@prisma/client';
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SessionContext } from 'src/bot/types/Scene';
+import { RedisService } from '../redis/redis.service';
+import { getRedisKeys } from '../redis/redisKeys';
 
 export const ROLES_KEY = 'roles';
 export const Roles = (...roles: EmployeeLevel[]) =>
@@ -10,7 +12,10 @@ export const Roles = (...roles: EmployeeLevel[]) =>
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private redis: RedisService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.get<EmployeeLevel[]>(
@@ -22,7 +27,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const ctx = context.switchToHttp().getRequest<SessionContext>();
-    const user = ctx.session.user_id;
+    const user = await this.redis.get<User>(getRedisKeys('user', ctx.chat.id));
 
     if (!user) {
       await ctx.reply(
@@ -31,7 +36,7 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    const isRoleCorrect = roles.includes(ctx.session.user.employee_level);
+    const isRoleCorrect = roles.includes(user.employee_level);
 
     if (!isRoleCorrect) {
       await ctx.reply('У вас нет доступа!');

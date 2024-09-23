@@ -27,11 +27,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BotEmployeeService } from './bot/employee/bot.employee.service';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { RedisService } from './core/redis/redis.service';
+import { session } from 'telegraf';
 
 @Module({
   imports: [
     TelegrafModule.forRoot({
       token: process.env.TELEGRAM_BOT_TOKEN,
+      middlewares: [session()],
     }),
     HttpModule,
     ScheduleModule.forRoot(),
