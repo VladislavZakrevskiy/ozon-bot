@@ -12,7 +12,7 @@ export function getDefaultText(data: User): string;
 export function getDefaultText(data: Order, onReturns?: Order[]): string;
 export function getDefaultText(data: User | Order, onReturns?: Order[]) {
   if (isOrder(data)) {
-    return `Вам новый заказ номер ${data.product_id}:
+    return `Вам новый заказ номер ${data.id}:
 Наименование товара: ${data.name}
 Количество: ${data.quantity}
 Цена: ${data.price} ${data.currency_code}

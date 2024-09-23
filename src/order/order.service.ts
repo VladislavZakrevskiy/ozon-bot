@@ -27,10 +27,17 @@ export class OrderService {
     return order;
   }
 
-  async updateOrder(product_id: number, data: CreateOrder) {
+  async updateOrder(product_id: number | string, data: CreateOrder) {
+    if (typeof product_id === 'number') {
+      const order = await this.prisma.order.update({
+        data,
+        where: { product_id: product_id },
+      });
+      return order;
+    }
     const order = await this.prisma.order.update({
       data,
-      where: { product_id },
+      where: { id: product_id },
     });
     return order;
   }

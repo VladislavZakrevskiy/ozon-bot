@@ -24,6 +24,7 @@ export class BotEmployeeService {
   // Тут нельзя сделать ctx, поэтому без session
   @Cron('*/30 * * * * *')
   async broadcastEmployees() {
+    console.log('broadcast emps');
     const newOrders = await this.orderService.findManyByParameter({
       process: [OrderProcess.FREE],
       is_send: false,
@@ -62,7 +63,7 @@ export class BotEmployeeService {
           },
         );
 
-        this.redis.addToList(
+        await this.redis.set(
           getRedisKeys('orderToDelete', newOrder.id, employee.tg_chat_id),
           message_id,
         );
@@ -86,9 +87,9 @@ export class BotEmployeeService {
 
     const current_chat_id = ctx.chat.id;
     const current_order_id = ctx.text.split(' ')[4].split('\n')[0].slice(0, -1);
-    const current_message_id = await this.redis.get(
-      getRedisKeys('orderToDelete', current_order_id, current_chat_id),
-    );
+    // const current_message_id = await this.redis.get(
+    //   getRedisKeys('orderToDelete', current_order_id, current_chat_id),
+    // );
     const current_user_id = await this.redis.get(
       getRedisKeys('user_id', current_chat_id),
     );
@@ -97,7 +98,10 @@ export class BotEmployeeService {
       id: current_order_id,
     });
 
-    await this.orderService.updateOrder(Number(current_order_id), {
+    delete current_order.id;
+    delete current_order.user_id;
+    delete current_order.user;
+    await this.orderService.updateOrder(current_order_id, {
       ...current_order,
       user_id: current_user_id,
       proccess: OrderProcess.IN_WORK,
@@ -109,9 +113,13 @@ export class BotEmployeeService {
         getRedisKeys('orderToDelete', current_order_id, emp_chat_id),
       );
 
-      if (emp_message_id && current_message_id == emp_message_id) {
+      if (emp_message_id) {
         await ctx.telegram.deleteMessage(emp_chat_id, Number(emp_message_id));
       }
+
+      await this.redis.delete(
+        getRedisKeys('orderToDelete', current_order_id, emp_chat_id),
+      );
     }
 
     ctx.reply('Вы взяли в работу этот заказ!');

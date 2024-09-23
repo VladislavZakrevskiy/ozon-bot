@@ -19,6 +19,7 @@ export class OzonService {
   // TODO поменять */5 * * * *
   @Cron('*/30 * * * * *')
   async pingOzon() {
+    console.log('ping ozon');
     const orders = await this.getOrders();
     const uniqueOrders = await this.getUniqueOrders(orders.data);
     await this.updateDBData(uniqueOrders);
@@ -117,12 +118,15 @@ export class OzonService {
   }
 
   async updateDBData(uniqueOrders: Omit<Order, 'id'>[]) {
-    const products = await this.prisma.order.createMany({
-      data: uniqueOrders.map((data) => ({
-        ...data,
-        proccess: OrderProcess.FREE,
-      })),
-    });
-    return products;
+    if (uniqueOrders.length !== 0) {
+      const products = await this.prisma.order.createMany({
+        data: uniqueOrders.map((data) => ({
+          ...data,
+          proccess: OrderProcess.FREE,
+        })),
+      });
+      return products;
+    }
+    return [];
   }
 }

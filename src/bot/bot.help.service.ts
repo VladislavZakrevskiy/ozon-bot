@@ -6,6 +6,7 @@ import { Context } from 'telegraf';
 import { SessionContext } from './types/Scene';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
+import { AuthGuard } from 'src/core/decorators/Auth.guard';
 
 const helpMessage: Record<EmployeeLevel, string> = {
   [EmployeeLevel.ADMIN]: `Привет, Админ!
@@ -32,6 +33,7 @@ const helpMessage: Record<EmployeeLevel, string> = {
 export class BotHelpService {
   constructor(private redis: RedisService) {}
 
+  @UseGuards(AuthGuard)
   @Command('help')
   async help(ctx: SessionContext) {
     const employee_level = (
