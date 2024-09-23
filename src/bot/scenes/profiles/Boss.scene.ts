@@ -6,7 +6,7 @@ import { Scenes as ScenesEnum } from '../../types/Scenes';
 import { EmployeeLevel, User } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
 
-// Add CRUD
+// Потом поменяю когда затесчу
 @Injectable()
 @Scene(ScenesEnum.PROFILE_BOSS)
 export class BossScene {

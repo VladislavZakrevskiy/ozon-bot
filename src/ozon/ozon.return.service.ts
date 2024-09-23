@@ -23,7 +23,7 @@ export class OzonReturnService {
   async getReturns() {
     const nowDate = new Date();
     const returns = await this.http.axiosRef.post<OzonReturn>(
-      'https://api-seller.ozon.ru/v3/returns/company/fbs',
+      `${process.env.OZON_API}/v3/returns/company/fbs`,
       {
         data: {
           filter: {
@@ -49,9 +49,9 @@ export class OzonReturnService {
   }
 
   async getProdutPic(data: {
-    offer_id: string;
-    product_id: number;
-    sku: number;
+    offer_id?: string;
+    product_id?: number;
+    sku?: number;
   }) {
     const images = await this.http.axiosRef.post<{
       result: { images: string[] };

@@ -1,12 +1,13 @@
-import { Post, Get, Patch, Param, Body } from '@nestjs/common';
+import { Post, Get, Patch, Param, Body, Controller } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { AddOrderDto } from './dto/api/AddOrderDTO';
 import { UpdateOrderDto } from './dto/api/UpdateOrderDTO';
 
+@Controller('order')
 export class OrderCotroller {
   constructor(private orderService: OrderService) {}
 
-  @Post('/order/add')
+  @Post('add')
   async addOrder(@Body() createOrderDto: AddOrderDto) {
     const order = await this.orderService.createOrder({
       ...createOrderDto,
@@ -17,7 +18,7 @@ export class OrderCotroller {
     return order;
   }
 
-  @Patch('/updateOrder/:id')
+  @Patch('/:id')
   async updateOrder(
     @Body() updateOrderDto: UpdateOrderDto,
     @Param('id') id: string,

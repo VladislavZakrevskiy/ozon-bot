@@ -3,13 +3,16 @@ import { Command, Ctx, Update } from 'nestjs-telegraf';
 import { SessionSceneContext } from './types/Scene';
 import { EmployeeLevel } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { AuthGuard } from 'src/user/decorators/Auth.guard';
+import { AuthGuard } from 'src/core/decorators/Auth.guard';
 import { Scenes } from './types/Scenes';
 
 @Injectable()
 @Update()
 export class BotProfileService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    // private redis: RedisService,
+  ) {}
 
   @Command('profile')
   @UseGuards(AuthGuard)

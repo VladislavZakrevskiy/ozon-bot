@@ -1,14 +1,53 @@
 import { Injectable } from '@nestjs/common';
-import { EmployeeLevel, User } from '@prisma/client';
+import { EmployeeLevel, Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { compareSync } from 'bcrypt';
 import { RegisterDto } from './dto/registerDto';
+import { JwtService } from 'src/auth/jwt/jwt.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   // Auth operations
+  async saveToken(
+    id: string,
+    token: string,
+    type: 'register' | 'login' = 'login',
+  ) {
+    if (type == 'login') {
+      const updatedToken = await this.prisma.refreshToken.update({
+        where: { user_id: id },
+        data: { token },
+      });
+      return updatedToken;
+    } else {
+      const createdToken = await this.prisma.refreshToken.create({
+        data: { token, user: { connect: { id } } },
+      });
+
+      return createdToken;
+    }
+  }
+
+  async createUser(registerData: Prisma.UserCreateInput) {
+    const user = await this.prisma.user.create({
+      data: {
+        ...registerData,
+      },
+    });
+
+    const access_token = this.jwtService.generateAccessToken({ user });
+    const refresh_token = this.jwtService.generateRefreshToken({ user });
+
+    this.saveToken(user.id, refresh_token, 'register');
+
+    return { user, access_token, refresh_token };
+  }
+
   async registerUser(registerData: RegisterDto) {
     const user = await this.prisma.user.create({
       data: {
@@ -20,7 +59,12 @@ export class UserService {
       },
     });
 
-    return user;
+    const access_token = this.jwtService.generateAccessToken({ user });
+    const refresh_token = this.jwtService.generateRefreshToken({ user });
+
+    this.saveToken(user.id, refresh_token, 'register');
+
+    return { user, access_token, refresh_token };
   }
 
   async validateUser(login: string, password: string) {
@@ -29,7 +73,16 @@ export class UserService {
     });
 
     if (candidate && compareSync(password, candidate.password)) {
-      return candidate;
+      const access_token = this.jwtService.generateAccessToken({
+        user: candidate,
+      });
+      const refresh_token = this.jwtService.generateRefreshToken({
+        user: candidate,
+      });
+
+      this.saveToken(candidate.id, refresh_token, 'login');
+
+      return { candidate, access_token, refresh_token };
     } else return null;
   }
 
@@ -79,6 +132,20 @@ export class UserService {
       where: { id },
       include: { orders: withOrders },
     });
+    return user;
+  }
+
+  async findUserByTgChat({
+    tg_chat_id,
+    tg_user_id,
+  }: {
+    tg_chat_id?: number;
+    tg_user_id?: number;
+  }) {
+    const user = await this.prisma.user.findUnique({
+      where: { tg_chat_id, tg_user_id },
+    });
+
     return user;
   }
 }

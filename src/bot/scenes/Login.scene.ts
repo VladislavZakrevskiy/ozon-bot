@@ -34,8 +34,10 @@ export class LoginScene {
 
       const user = await this.userService.validateUser(state.login, password);
       if (user) {
-        ctx.session.user_id = user.id;
-        ctx.session.user = user;
+        ctx.session.user_id = user.candidate.id;
+        ctx.session.user = user.candidate;
+        ctx.session.refresh_token = user.access_token;
+        ctx.session.access_token = user.refresh_token;
         await ctx.reply('Вы успешно авторизовались!');
         await ctx.scene.leave();
       } else {

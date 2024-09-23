@@ -9,6 +9,8 @@ import { SessionContext } from './types/Scene';
 export class BotService {
   @Start()
   async startCommand(@Ctx() ctx: SessionContext) {
+    console.log(ctx.chat.id); // 1415216558
+    console.log(ctx.from.id); // 1415216558
     await ctx.reply(
       'Добро пожаловать! Используйте /login для авторизации, /register для регистрации',
     );

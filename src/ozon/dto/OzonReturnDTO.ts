@@ -7,7 +7,7 @@ export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price'> {
   offer_id: string;
   ozon_id: string;
   currency_code: $Enums.CurrencyCode;
-  product_id: string;
+  product_id: number;
   is_express: boolean = false;
   name: string;
   price: number;
@@ -31,14 +31,13 @@ export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price'> {
     } = data;
     this.actions = [];
     this.currency_code = 'RUB';
-    this.product_id = String(product_id);
+    this.product_id = product_id;
     this.price = price;
     this.quantity = quantity;
     this.name = product_name;
     this.sku = sku;
     this.date = new Date(last_free_waiting_day);
     this.image_urls = image_urls;
-    // TODO АРТИКУЛА НЕТ!!!!! ОЗОН САСАТ
     this.offer_id = '';
     this.ozon_id = String(id);
   }

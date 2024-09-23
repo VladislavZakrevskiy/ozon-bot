@@ -5,15 +5,19 @@ import { OzonOrder } from './types/OzonOrder';
 import { OzonOrderDTO } from './dto/OzonOrderDTO';
 import { Order, OrderProcess } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
+import { OzonImagesService } from './ozon.images.service';
 
 @Injectable()
 export class OzonService {
   constructor(
     private prisma: PrismaService,
     private http: HttpService,
+    private ozonImagesService: OzonImagesService,
   ) {}
 
-  @Cron('*/5 * * * *')
+  // */30 * * * * *
+  // TODO поменять */5 * * * *
+  @Cron('*/30 * * * * *')
   async pingOzon() {
     const orders = await this.getOrders();
     const uniqueOrders = await this.getUniqueOrders(orders.data);
@@ -23,7 +27,7 @@ export class OzonService {
   async getOrders() {
     const nowDate = new Date();
     const newOrders = await this.http.axiosRef.post<OzonOrder>(
-      'https://api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list',
+      `${process.env.OZON_API}/v3/posting/fbs/unfulfilled/list`,
       {
         data: {
           dir: 'ASC',
@@ -35,16 +39,19 @@ export class OzonService {
             status: 'awaiting_packaging',
           },
           with: {
-            analytics_data: true,
-            barcodes: true,
             financial_data: true,
-            translit: true,
+            analytics_data: true,
           },
           limit: 500,
           offset: 0,
         },
       },
-      { headers: { 'Client-Id': '', 'Api-Key': '' } },
+      {
+        headers: {
+          'Client-Id': process.env.OZON_CLIENT_ID,
+          'Api-Key': process.env.OZON_API_KEY,
+        },
+      },
     );
 
     return newOrders;
@@ -57,7 +64,7 @@ export class OzonService {
   }) {
     const images = await this.http.axiosRef.post<{
       result: { images: string[] };
-    }>('https://api-seller.ozon.ru/v2/product/info', data, {
+    }>(`${process.env.OZON_API}/v2/product/info`, data, {
       headers: {
         'Client-Id': process.env.OZON_CLIENT_ID,
         'Api-Key': process.env.OZON_API_KEY,
@@ -71,11 +78,14 @@ export class OzonService {
     const uniqueOrders: Omit<Order, 'id'>[] = [];
 
     const newOrders = newOrder.result.postings
-      .map((posting) =>
+      .map((posting, i) =>
         posting.products.map(
-          (product) =>
+          (product, j) =>
             new OzonOrderDTO(
-              product,
+              {
+                ...newOrder.result.postings[i].financial_data.products[j],
+                ...product,
+              },
               new Date(posting.analytics_data.delivery_date_begin),
               [],
             ),
@@ -108,7 +118,10 @@ export class OzonService {
 
   async updateDBData(uniqueOrders: Omit<Order, 'id'>[]) {
     const products = await this.prisma.order.createMany({
-      data: { ...uniqueOrders, proccess: OrderProcess.FREE },
+      data: uniqueOrders.map((data) => ({
+        ...data,
+        proccess: OrderProcess.FREE,
+      })),
     });
     return products;
   }

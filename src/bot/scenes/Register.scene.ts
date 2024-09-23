@@ -42,7 +42,7 @@ export class RegisterScene {
     } else {
       const phone_number = ctx.text;
 
-      const user = await this.userService.registerUser({
+      const { user } = await this.userService.registerUser({
         first_name: state.name.split(' ')?.[0] || 'Имя не указано',
         last_name: state.name.split(' ')?.[1] || 'Фамилия не указана',
         login: state.login,
@@ -57,9 +57,10 @@ export class RegisterScene {
       );
 
       const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
+
       const photo_file_id = (
         await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1)
-      ).photos[0][0].file_id;
+      ).photos[0][2].file_id;
       const photo_url = await ctx.telegram.getFileLink(photo_file_id);
 
       await ctx.telegram.sendPhoto(
@@ -72,7 +73,7 @@ export class RegisterScene {
 Имя: ${user.first_name} ${user.last_name}
 Логин: ${user.login}
 Номер телефона: ${user.phone_number || 'Нет'}
-Телеграм ник: ${ctx.from.username || 'Нет'}
+Телеграм ник: @${ctx.from.username || 'Нет'}
 Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name}
         `,
           reply_markup: {

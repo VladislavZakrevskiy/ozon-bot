@@ -10,7 +10,7 @@ export class OrderService {
 
   async getOrdersOnReturns(name: string) {
     const return_candidates = await this.prisma.order.findMany({
-      where: { name },
+      where: { name, proccess: 'RETURN' },
     });
 
     return return_candidates;
@@ -27,7 +27,7 @@ export class OrderService {
     return order;
   }
 
-  async updateOrder(product_id: string, data: CreateOrder) {
+  async updateOrder(product_id: number, data: CreateOrder) {
     const order = await this.prisma.order.update({
       data,
       where: { product_id },

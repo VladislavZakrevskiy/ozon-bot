@@ -1,16 +1,17 @@
-import { Get, Patch, Param, Body } from '@nestjs/common';
+import { Get, Patch, Param, Body, Controller } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from './dto/api/UpdateUserDTO';
-import { Token } from './decorators/Token.decorator';
-import { JwtService } from 'src/core/jwt/jwt.service';
+import { Token } from '../core/decorators/Token.decorator';
+import { JwtService } from 'src/auth/jwt/jwt.service';
 
+@Controller('user')
 export class UserCotroller {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
 
-  @Patch('/updateOrder/:id')
+  @Patch('/:id')
   async updateUser(
     @Body() updateOrderDto: UpdateUserDTO,
     @Param('id') id: string,
@@ -31,11 +32,11 @@ export class UserCotroller {
     return order;
   }
 
-  @Get('/getMe')
+  @Get()
   async getMe(@Token() token: string) {
     const {
       user: { id },
-    } = this.jwtService.decodeToken(token);
+    } = this.jwtService.decodeAccessToken(token);
     const user = await this.userService.findUserById(id);
     return user;
   }

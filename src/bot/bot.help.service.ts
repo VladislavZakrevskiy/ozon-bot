@@ -1,9 +1,11 @@
 import { Injectable, UseGuards } from '@nestjs/common';
-import { Roles, RolesGuard } from 'src/user/decorators/Roles.guard';
-import { EmployeeLevel } from '@prisma/client';
+import { Roles, RolesGuard } from 'src/core/decorators/Roles.guard';
+import { EmployeeLevel, User } from '@prisma/client';
 import { Command, Update } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 import { SessionContext } from './types/Scene';
+import { RedisService } from 'src/core/redis/redis.service';
+import { getRedisKeys } from 'src/core/redis/redisKeys';
 
 const helpMessage: Record<EmployeeLevel, string> = {
   [EmployeeLevel.ADMIN]: `Привет, Админ!
@@ -28,9 +30,13 @@ const helpMessage: Record<EmployeeLevel, string> = {
 @Injectable()
 @Update()
 export class BotHelpService {
+  constructor(private redis: RedisService) {}
+
   @Command('help')
-  help(ctx: SessionContext) {
-    const employee_level = ctx.session.user.employee_level;
+  async help(ctx: SessionContext) {
+    const employee_level = (
+      await this.redis.get<User>(getRedisKeys('user', ctx.chat.id))
+    ).employee_level;
 
     ctx.reply(helpMessage[employee_level]);
   }

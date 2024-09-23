@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserCotroller } from './user.controller';
 import { UserService } from './user.service';
-import { JwtService } from 'src/core/jwt/jwt.service';
+import { JwtService } from 'src/auth/jwt/jwt.service';
 
 @Module({
   imports: [],

@@ -21,15 +21,15 @@ model User {
   money          Int
   isApproved     Boolean
   orders         Order[]
+  RefreshToken   RefreshToken?
 
   @@map("users")
 }
 
 model Order {
-  id                   String       @id @default(uuid()) @map("_id") @db.ObjectId
-  ozon_id              String       @unique
-  product_id           String       @unique
-  offer_id             String       @unique
+  id                   String       @id @default(auto()) @map("_id") @db.ObjectId
+  product_id           Int      @unique  
+  offer_id             String        
   name                 String
   price                Int
   old_price            Int?
@@ -47,6 +47,14 @@ model Order {
   image_urls           String[]
 
   @@map("orders")
+}
+
+model RefreshToken {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  user_id String @unique @db.ObjectId
+  token   String
+
+  user User @relation(fields: [user_id], references: [id])
 }
 
 enum EmployeeLevel {
