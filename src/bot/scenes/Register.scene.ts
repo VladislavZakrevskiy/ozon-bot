@@ -6,6 +6,7 @@ import { SessionSceneContext } from '../types/Scene';
 import { UserService } from 'src/user/user.service';
 import { EmployeeLevel } from '@prisma/client';
 import { hashSync } from 'bcrypt';
+import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 
 @Injectable()
 @Scene(ScenesEnum.REGISTER)
@@ -57,11 +58,7 @@ export class RegisterScene {
       );
 
       const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
-
-      const photo_file_id = (
-        await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1)
-      ).photos[0][2].file_id;
-      const photo_url = await ctx.telegram.getFileLink(photo_file_id);
+      const photo_url = getTelegramImage(ctx, user.tg_user_id);
 
       await ctx.telegram.sendPhoto(
         Number(boss[0].tg_chat_id),

@@ -1,113 +1,122 @@
 import { Injectable } from '@nestjs/common';
-import { Ctx, Scene, SceneEnter, Action } from 'nestjs-telegraf';
+import { Ctx, Action, Update } from 'nestjs-telegraf';
 import { UserService } from 'src/user/user.service';
-import { SessionContext, SessionSceneContext } from 'src/bot/types/Scene';
-import { Scenes as ScenesEnum } from '../../types/Scenes';
-import { OrderProcess, User } from '@prisma/client';
+import { SessionSceneContext } from 'src/bot/types/Scene';
+import { EmployeeLevel } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
-import { OrderService } from '../../../order/order.service';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
+import { ListManager } from 'src/bot/templates/ListManager';
+import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 
-// Add CRUD
 @Injectable()
-@Scene(ScenesEnum.PROFILE_ADMIN)
-export class AdminScene {
+@Update()
+export class AdminProfileService {
   constructor(
     private readonly userService: UserService,
-    private readonly orderService: OrderService,
     private redis: RedisService,
   ) {}
 
-  async getArrowMessage(
-    ctx: SessionContext,
-    user: User,
-    isFirst: boolean = false,
-  ) {
-    const orders = await this.orderService.findManyByParameter({
-      order_by_date: 'desc',
-      process: [OrderProcess.RETURN],
-    });
-    const adminLastOrderId = await this.redis.get(
-      getRedisKeys('adminLastOrderId', ctx.chat.id),
+  // ListManager and some data
+  async getListManager(ctx: SessionSceneContext) {
+    const currentIndex = Number(
+      await this.redis.get(getRedisKeys('currentIndex_admin', '', ctx.chat.id)),
+    );
+    const users = await this.userService.findUserByRole(EmployeeLevel.EMPLOYEE);
+    const listManager = new ListManager(
+      this.redis,
+      users,
+      {
+        extraButtons: [
+          [
+            {
+              text: 'Редактировать',
+              callback_data: 'admin_edit_employee',
+              web_app: `${process.env.WEBAPP_URL}`,
+            },
+          ],
+          [{ text: 'Уволить', callback_data: 'admin_dismiss_employee' }],
+          [{ text: 'Расчитать заработную плату', callback_data: 'admin_give_money' }],
+        ],
+        getText: (order) => getDefaultText(order, 'char'),
+        getImage: async (user) => (await getTelegramImage(ctx, user.tg_user_id)).toString(),
+      },
+      ctx,
+      '',
+      'currentIndex_admin',
     );
 
-    if (!adminLastOrderId) {
-      await this.redis.set(
-        getRedisKeys('adminLastOrderId', ctx.chat.id),
-        orders[0].id,
-      );
-    } else {
-      const next_index =
-        (orders.findIndex(({ id }) => id == adminLastOrderId) + 1) %
-        orders.length;
+    return { listManager, currentIndex, users };
+  }
 
-      await this.redis.set(
-        getRedisKeys('adminLastOrderId', ctx.chat.id),
-        orders[next_index].id,
-      );
-    }
+  // Profile
+  async handleProfile(ctx: SessionSceneContext) {
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
 
-    const order = orders.find(({ id }) => id === adminLastOrderId);
-    const order_index = orders.findIndex(({ id }) => id === order.id);
+    const photo_file_id = (await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1))
+      .photos[0][2].file_id;
+    const photo_url = await ctx.telegram.getFileLink(photo_file_id);
 
-    if (isFirst) {
-      // First message
-      await ctx.reply(getDefaultText(user));
-
-      // admin's returns
-      await ctx.reply('Здесь возвраты!');
-      await ctx.reply(getDefaultText(order), {
+    ctx.sendPhoto(
+      { url: photo_url.toString() },
+      {
+        caption: getDefaultText(user, 'new'),
         reply_markup: {
-          inline_keyboard: [
-            [
-              order_index !== 0
-                ? { text: '⬅️', callback_data: 'admin_back' }
-                : undefined,
-              order_index !== orders.length - 1
-                ? { text: '➡️', callback_data: 'admin_forward' }
-                : undefined,
-            ],
-          ],
+          inline_keyboard: [[{ callback_data: 'admin_employees', text: 'Сотрудники' }]],
         },
-      });
+      },
+    );
+  }
+
+  // List
+  @Action('next_currentIndex_admin_')
+  public async handleNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
+    const { currentIndex, listManager, users } = await this.getListManager(ctx);
+
+    if (currentIndex < users.length - 1) {
+      await this.redis.set(
+        getRedisKeys('currentIndex_admin', listManager.prefix, ctx.chat.id),
+        currentIndex + 1,
+      );
+      await listManager.editMessage();
     } else {
-      // next messages
-      await ctx.editMessageText(getDefaultText(order), {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              order_index !== 0
-                ? { text: '⬅️', callback_data: 'admin_back' }
-                : undefined,
-              order_index !== orders.length - 1
-                ? { text: '➡️', callback_data: 'admin_forward' }
-                : undefined,
-            ],
-          ],
-        },
-      });
+      await ctx.answerCbQuery('Нет следующего элемента');
     }
   }
 
-  @SceneEnter()
-  async onSceneEnter(@Ctx() ctx: SessionSceneContext) {
-    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
-    const user = await this.userService.findUserById(user_id, true);
-    this.getArrowMessage(ctx, user, true);
+  @Action('prev_currentIndex_admin_')
+  public async handlePrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
+    const { currentIndex, listManager } = await this.getListManager(ctx);
+
+    if (currentIndex > 0) {
+      await this.redis.set(
+        getRedisKeys('currentIndex_admin', listManager.prefix, ctx.chat.id),
+        currentIndex - 1,
+      );
+      await listManager.editMessage();
+    } else {
+      await ctx.answerCbQuery('Нет предыдущего элемента');
+    }
   }
 
-  @Action('admin_back')
-  async adminBackArrow(ctx: SessionContext) {
-    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
-    const user = await this.userService.findUserById(user_id, true);
-    this.getArrowMessage(ctx, user);
+  @Action('admin_employees')
+  async sendDoneOrders(@Ctx() ctx: SessionSceneContext) {
+    const { listManager, users } = await this.getListManager(ctx);
+
+    if (users.length === 0) {
+      await ctx.reply('Сотрудников нет(');
+      return;
+    }
+
+    listManager.sendInitialMessage();
   }
 
-  @Action('admin_forward')
-  async adminForwardArrow(ctx: SessionContext) {
-    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
-    const user = await this.userService.findUserById(user_id, true);
-    this.getArrowMessage(ctx, user);
-  }
+  // TODO
+  // Employee Actions
+  @Action('admin_dismiss_employee')
+  dismissEmployee() {}
+
+  @Action('admin_give_money')
+  editEmployee() {}
 }

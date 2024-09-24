@@ -1,11 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { SessionContext } from 'src/bot/types/Scene';
+import { RedisService } from '../redis/redis.service';
+import { getRedisKeys } from '../redis/redisKeys';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(private redis: RedisService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = context.switchToHttp().getRequest<SessionContext>();
-    const userId = ctx?.session?.user_id;
+    const userId = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
 
     if (!userId) {
       await ctx.reply(

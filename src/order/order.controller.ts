@@ -23,15 +23,9 @@ export class OrderCotroller {
     @Body() updateOrderDto: UpdateOrderDto,
     @Param('id') id: string,
   ) {
-    const order = await this.orderService.findOneByParameter({ id });
-    const updatedOrder = await this.orderService.updateOrder(
-      updateOrderDto.product_id,
-      {
-        id,
-        ...order,
-        ...updateOrderDto,
-      },
-    );
+    const updatedOrder = await this.orderService.updateOrder(id, {
+      ...updateOrderDto,
+    });
 
     return updatedOrder;
   }

@@ -15,7 +15,7 @@ export class BotAdminService {
     private orderService: OrderService,
   ) {}
 
-  @Cron('*/5 * * * *')
+  @Cron(process.env.OZON_PING_STEP)
   async broadcastUser(ctx: SessionContext) {
     const newReturns = await this.orderService.findManyByParameter({
       order_by_date: 'desc',
@@ -34,7 +34,7 @@ export class BotAdminService {
           ret.image_urls.map((url, i) => ({
             media: url,
             type: 'photo',
-            caption: i === 0 ? getDefaultText(ret) : undefined,
+            caption: i === 0 ? getDefaultText(ret, 'new') : undefined,
           })),
         );
       }

@@ -1,55 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import { Action } from 'nestjs-telegraf';
-import { Context } from 'telegraf';
+import { RedisService } from 'src/core/redis/redis.service';
+import { getRedisKeys } from 'src/core/redis/redisKeys';
+import { SessionSceneContext } from '../types/Scene';
 
 interface ListManagerOptions<T> {
   getText: (data: T) => string;
-  getImage?: (data: T) => string | Promise<string>;
-  extraButtons?: { text: string; callback_data: string }[][];
+  getImage?: (data: T) => Promise<string>;
+  extraButtons?: { text: string; callback_data: string; web_app?: string }[][];
 }
 
 @Injectable()
 export class ListManager<T> {
-  private list: T[] = [];
-  private options: ListManagerOptions<T>;
-  private currentIndex = 0;
+  current_index: number = 0;
 
-  constructor() {}
+  constructor(
+    private redis: RedisService,
+    private list: T[],
+    private options: ListManagerOptions<T>,
+    private ctx: SessionSceneContext,
+    public prefix: string,
+    public key: string,
+  ) {}
 
-  public setTemplate(list: T[], options: ListManagerOptions<T>): void {
-    this.list = list;
-    this.options = options;
+  private async currentItem() {
+    const currentIndex = Number(
+      await this.redis.get(getRedisKeys(this.key, this.prefix, this.ctx.chat.id)),
+    );
+    this.current_index = currentIndex;
+
+    return this.list[currentIndex];
   }
 
-  private get currentItem(): T {
-    return this.list[this.currentIndex];
-  }
-
-  public getText(): string {
-    return this.options.getText(this.currentItem);
+  public async getText() {
+    const current_item = await this.currentItem();
+    return this.options.getText(current_item);
   }
 
   public async getImage() {
-    return (await this.options.getImage(this.currentItem)) || '';
+    const current_item = await this.currentItem();
+    const image = await this.options.getImage(current_item);
+
+    return image || 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
   }
-  private getButtons(): Array<{ text: string; callback_data: string }> {
+  private async getButtons() {
     const buttons = [];
 
-    if (this.currentIndex > 0) {
-      buttons.push({ text: '⬅ Назад', callback_data: 'prev' });
+    if (this.current_index > 0) {
+      buttons.push({ text: '⬅ Назад', callback_data: `prev_${this.key}_${this.prefix}` });
     }
 
-    if (this.currentIndex < this.list.length - 1) {
-      buttons.push({ text: 'Вперед ➡', callback_data: 'next' });
+    if (this.current_index < this.list.length - 1) {
+      buttons.push({ text: 'Вперед ➡', callback_data: `next_${this.key}_${this.prefix}` });
     }
 
-    return buttons;
+    return buttons as {
+      text: string;
+      callback_data: string;
+    }[];
   }
 
-  public async sendInitialMessage(ctx: Context): Promise<void> {
-    const text = this.getText();
-    const buttons = this.getButtons();
+  public async sendInitialMessage(): Promise<void> {
+    const text = await this.getText();
+    const buttons = await this.getButtons();
     const image = await this.getImage();
+
+    await this.redis.set(getRedisKeys(this.key, this.prefix, this.ctx.chat.id), 0);
 
     const inlineKeyboard = {
       inline_keyboard: [
@@ -57,25 +72,26 @@ export class ListManager<T> {
           text: btn.text,
           callback_data: btn.callback_data,
         })),
-        ...this.options.extraButtons,
+        [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
+        ...(this.options.extraButtons || []),
       ],
     };
 
     if (image) {
-      await ctx.replyWithPhoto(image, {
+      await this.ctx.replyWithPhoto(image, {
         caption: text,
         reply_markup: inlineKeyboard,
       });
     } else {
-      await ctx.reply(text, {
+      await this.ctx.reply(text, {
         reply_markup: inlineKeyboard,
       });
     }
   }
 
-  private async editMessage(ctx: Context): Promise<void> {
-    const text = this.getText();
-    const buttons = this.getButtons();
+  public async editMessage(): Promise<void> {
+    const text = await this.getText();
+    const buttons = await this.getButtons();
     const image = await this.getImage();
 
     const inlineKeyboard = {
@@ -84,12 +100,14 @@ export class ListManager<T> {
           text: btn.text,
           callback_data: btn.callback_data,
         })),
+        [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
+        ...(this.options.extraButtons || []),
       ],
     };
 
     try {
       if (image) {
-        await ctx.editMessageMedia(
+        await this.ctx.editMessageMedia(
           {
             type: 'photo',
             media: image,
@@ -100,32 +118,12 @@ export class ListManager<T> {
           },
         );
       } else {
-        await ctx.editMessageText(text, {
+        await this.ctx.editMessageText(text, {
           reply_markup: inlineKeyboard,
         });
       }
     } catch (error) {
       console.log('Ошибка при редактировании сообщения:', error);
-    }
-  }
-
-  @Action('next')
-  public async handleNext(ctx: Context): Promise<void> {
-    if (this.currentIndex < this.list.length - 1) {
-      this.currentIndex++;
-      await this.editMessage(ctx);
-    } else {
-      await ctx.answerCbQuery('Нет следующего элемента');
-    }
-  }
-
-  @Action('prev')
-  public async handlePrev(ctx: Context): Promise<void> {
-    if (this.currentIndex > 0) {
-      this.currentIndex--;
-      await this.editMessage(ctx);
-    } else {
-      await ctx.answerCbQuery('Нет предыдущего элемента');
     }
   }
 }

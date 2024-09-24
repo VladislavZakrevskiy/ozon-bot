@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma.service';
 import { FindOneByParameter } from './dto/FindOneByParameter';
 import { FindManyByParameter } from './dto/FindManyByParameter';
 import { CreateOrder } from './dto/CreateOrder';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -27,7 +28,10 @@ export class OrderService {
     return order;
   }
 
-  async updateOrder(product_id: number | string, data: CreateOrder) {
+  async updateOrder(
+    product_id: number | string,
+    data: Prisma.OrderUpdateInput,
+  ) {
     if (typeof product_id === 'number') {
       const order = await this.prisma.order.update({
         data,

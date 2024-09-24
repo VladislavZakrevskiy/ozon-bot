@@ -17,7 +17,7 @@ export class OzonService {
 
   // */30 * * * * *
   // TODO поменять */5 * * * *
-  @Cron('*/30 * * * * *')
+  @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
     console.log('ping ozon');
     const orders = await this.getOrders();
@@ -58,11 +58,7 @@ export class OzonService {
     return newOrders;
   }
 
-  async getProdutPic(data: {
-    offer_id: string;
-    product_id: number;
-    sku: number;
-  }) {
+  async getProdutPic(data: { offer_id?: string; product_id?: number; sku?: number }) {
     const images = await this.http.axiosRef.post<{
       result: { images: string[] };
     }>(`${process.env.OZON_API}/v2/product/info`, data, {

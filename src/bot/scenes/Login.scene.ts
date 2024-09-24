@@ -39,16 +39,10 @@ export class LoginScene {
 
       const user = await this.userService.validateUser(state.login, password);
       if (user) {
-        this.redis.set(getRedisKeys('user_id', ctx.chat.id), user.candidate.id);
-        this.redis.set(getRedisKeys('user', ctx.chat.id), user.candidate);
-        this.redis.set(
-          getRedisKeys('refresh_token', ctx.chat.id),
-          user.refresh_token,
-        );
-        this.redis.set(
-          getRedisKeys('access_token', ctx.chat.id),
-          user.access_token,
-        );
+        await this.redis.set(getRedisKeys('user_id', ctx.chat.id), user.candidate.id);
+        await this.redis.set(getRedisKeys('user', ctx.chat.id), user.candidate);
+        await this.redis.set(getRedisKeys('refresh_token', ctx.chat.id), user.refresh_token);
+        await this.redis.set(getRedisKeys('access_token', ctx.chat.id), user.access_token);
 
         await ctx.reply('Вы успешно авторизовались!');
         await ctx.scene.leave();

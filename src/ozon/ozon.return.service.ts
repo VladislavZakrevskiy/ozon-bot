@@ -13,7 +13,7 @@ export class OzonReturnService {
     private http: HttpService,
   ) {}
 
-  @Cron('*/5 * * * *')
+  @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
     const orders = await this.getReturns();
     const uniqueOrders = await this.getUniqueOrders(orders.data);

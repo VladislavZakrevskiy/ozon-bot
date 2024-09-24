@@ -21,7 +21,6 @@ export class OzonImagesService {
         headers: {
           'Client-Id': process.env.OZON_CLIENT_ID,
           'Api-Key': process.env.OZON_API_KEY,
-          'Content-Type': 'application/json',
         },
       },
     );
