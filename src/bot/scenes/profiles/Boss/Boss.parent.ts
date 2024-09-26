@@ -25,7 +25,14 @@ export class BossParent {
       users,
       {
         extraButtons: [
-          [{ text: 'Редактировать', callback_data: 'edit', web_app: `${process.env.WEBAPP_URL}` }],
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            {
+              text: 'Редактировать',
+              web_app: { url: `${process.env.WEBAPP_URL}` },
+            },
+          ],
         ],
         getText: (user) => getDefaultText(user, 'char'),
         getImage: async (user) => (await getTelegramImage(ctx, user.tg_user_id)).toString(),
@@ -48,7 +55,14 @@ export class BossParent {
       orders,
       {
         extraButtons: [
-          [{ text: 'Редактировать', callback_data: 'edit', web_app: `${process.env.WEBAPP_URL}` }],
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            {
+              text: 'Редактировать',
+              web_app: { url: `${process.env.WEBAPP_URL}` },
+            },
+          ],
           [{ text: 'Сделать возвратом', callback_data: 'make_returns' }],
         ],
         getText: (order) => getDefaultText(order, 'char'),

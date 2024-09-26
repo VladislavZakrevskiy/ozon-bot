@@ -21,11 +21,11 @@ export class BossUserActions extends BossParent {
   }
 
   // UserList
-  @Action(/^next_currentIndex_boss_(ADMIN|EMPLOYEE|BOSS)$/)
+  @Action(/^next__currentIndex_boss_(ADMIN|EMPLOYEE|BOSS)$/)
   public async handleUserNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
-    )?.[3] as EmployeeLevel;
+    )?.[4] as EmployeeLevel;
     const { currentIndex, listManager, users } = await this.getUsersListManager(ctx, prefix);
 
     if (currentIndex <= users.length - 1) {
@@ -39,11 +39,11 @@ export class BossUserActions extends BossParent {
     }
   }
 
-  @Action(/^prev_currentIndex_boss_(ADMIN|EMPLOYEE|BOSS)$/)
+  @Action(/^prev__currentIndex_boss_(ADMIN|EMPLOYEE|BOSS)$/)
   public async handleUserPrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
-    )?.[3] as EmployeeLevel;
+    )?.[4] as EmployeeLevel;
     const { currentIndex, listManager } = await this.getUsersListManager(ctx, prefix);
 
     if (currentIndex > 0) {

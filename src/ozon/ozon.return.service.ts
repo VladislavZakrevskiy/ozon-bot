@@ -5,18 +5,22 @@ import { Order, OrderProcess } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
 import { OzonReturn } from './types/OzonReturn';
 import { OzonReturnDTO } from './dto/OzonReturnDTO';
+import { OzonImagesService } from './ozon.images.service';
 
 @Injectable()
 export class OzonReturnService {
   constructor(
     private prisma: PrismaService,
     private http: HttpService,
+    private ozonImagesService: OzonImagesService,
   ) {}
 
   @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
+    console.log('ping returns');
     const orders = await this.getReturns();
     const uniqueOrders = await this.getUniqueOrders(orders.data);
+    console.log(uniqueOrders);
     await this.updateDBData(uniqueOrders);
   }
 
@@ -48,25 +52,8 @@ export class OzonReturnService {
     return returns;
   }
 
-  async getProdutPic(data: {
-    offer_id?: string;
-    product_id?: number;
-    sku?: number;
-  }) {
-    const images = await this.http.axiosRef.post<{
-      result: { images: string[] };
-    }>('https://api-seller.ozon.ru/v2/product/info', data, {
-      headers: {
-        'Client-Id': process.env.OZON_CLIENT_ID,
-        'Api-Key': process.env.OZON_API_KEY,
-      },
-    });
-
-    return images.data.result.images;
-  }
-
   async getUniqueOrders(newOrder: OzonReturn) {
-    const uniqueOrders: Omit<Order, 'id' | 'old_price'>[] = [];
+    const uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id'>[] = [];
 
     const newOrders = newOrder.returns.map((ret) => new OzonReturnDTO(ret, []));
 
@@ -81,7 +68,7 @@ export class OzonReturnService {
         }
       }
       if (isUnique) {
-        const image_urls = await this.getProdutPic({
+        const image_urls = await this.ozonImagesService.getImage({
           offer_id: newOrder.offer_id,
           product_id: Number(newOrder.product_id),
           sku: newOrder.sku,
@@ -93,10 +80,15 @@ export class OzonReturnService {
     return uniqueOrders;
   }
 
-  async updateDBData(uniqueOrders: Omit<Order, 'id' | 'old_price'>[]) {
-    const products = await this.prisma.order.createMany({
-      data: { ...uniqueOrders, proccess: OrderProcess.RETURN },
-    });
-    return products;
+  async updateDBData(uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id'>[]) {
+    console.log(uniqueOrders.length, 'uniqueOrders.length');
+    if (uniqueOrders.length !== 0) {
+      const products = await this.prisma.order.createMany({
+        data: uniqueOrders.map((order) => ({ ...order, proccess: OrderProcess.RETURN })),
+      });
+      console.log(products);
+      return products;
+    }
+    return [];
   }
 }

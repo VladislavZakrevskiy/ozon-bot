@@ -6,7 +6,7 @@ import { SessionSceneContext } from '../types/Scene';
 interface ListManagerOptions<T> {
   getText: (data: T) => string;
   getImage?: (data: T) => Promise<string>;
-  extraButtons?: { text: string; callback_data: string; web_app?: string }[][];
+  extraButtons?: { text: string; callback_data: string; web_app?: { url: string } }[][];
 }
 
 @Injectable()
@@ -22,7 +22,7 @@ export class ListManager<T> {
     public key: string,
   ) {}
 
-  private async currentItem() {
+  public async currentItem() {
     const currentIndex = Number(
       await this.redis.get(getRedisKeys(this.key, this.prefix, this.ctx.chat.id)),
     );
@@ -46,11 +46,11 @@ export class ListManager<T> {
     const buttons = [];
 
     if (this.current_index > 0) {
-      buttons.push({ text: '⬅ Назад', callback_data: `prev_${this.key}_${this.prefix}` });
+      buttons.push({ text: '⬅ Назад', callback_data: `prev__${this.key}_${this.prefix}` });
     }
 
     if (this.current_index < this.list.length - 1) {
-      buttons.push({ text: 'Вперед ➡', callback_data: `next_${this.key}_${this.prefix}` });
+      buttons.push({ text: 'Вперед ➡', callback_data: `next__${this.key}_${this.prefix}` });
     }
 
     return buttons as {
@@ -80,11 +80,13 @@ export class ListManager<T> {
     if (image) {
       await this.ctx.replyWithPhoto(image, {
         caption: text,
+        parse_mode: 'MarkdownV2',
         reply_markup: inlineKeyboard,
       });
     } else {
       await this.ctx.reply(text, {
         reply_markup: inlineKeyboard,
+        parse_mode: 'MarkdownV2',
       });
     }
   }
@@ -112,6 +114,7 @@ export class ListManager<T> {
             type: 'photo',
             media: image,
             caption: text,
+            parse_mode: 'MarkdownV2',
           },
           {
             reply_markup: inlineKeyboard,
@@ -119,6 +122,7 @@ export class ListManager<T> {
         );
       } else {
         await this.ctx.editMessageText(text, {
+          parse_mode: 'MarkdownV2',
           reply_markup: inlineKeyboard,
         });
       }

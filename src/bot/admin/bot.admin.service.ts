@@ -20,7 +20,7 @@ export class BotAdminService {
     const newReturns = await this.orderService.findManyByParameter({
       order_by_date: 'desc',
       process: [OrderProcess.RETURN],
-      is_send: true,
+      is_send: false,
     });
     const users = await this.userService.findUserByRole([
       EmployeeLevel.ADMIN,
@@ -34,6 +34,7 @@ export class BotAdminService {
           ret.image_urls.map((url, i) => ({
             media: url,
             type: 'photo',
+            parse_mode: 'MarkdownV2',
             caption: i === 0 ? getDefaultText(ret, 'new') : undefined,
           })),
         );

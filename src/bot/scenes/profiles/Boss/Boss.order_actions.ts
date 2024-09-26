@@ -21,11 +21,12 @@ export class BossOrderActions extends BossParent {
   }
 
   // OrderList
-  @Action(/^next_(DONE|IN_WORK|RETURN)$/)
+  @Action(/^next__currentIndex_boss_(DONE|IN_WORK|RETURN)$/)
   public async handleOrderNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
-    )?.[1] as OrderProcess;
+    )?.[4] as OrderProcess;
+    console.log((ctx.callbackQuery as CallbackQuery.DataQuery).data.split('_'));
     const { currentIndex, listManager, orders } = await this.getOrdersListManager(ctx, prefix);
 
     if (currentIndex < orders.length - 1) {
@@ -39,11 +40,11 @@ export class BossOrderActions extends BossParent {
     }
   }
 
-  @Action(/^prev_(admin|employee|boss)$/)
+  @Action(/^prev__currentIndex_boss_(DONE|IN_WORK|RETURN)$/)
   public async handleOrderPrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
-    )?.[1] as OrderProcess;
+    )?.[4] as OrderProcess;
     const { currentIndex, listManager } = await this.getOrdersListManager(ctx, prefix);
 
     if (currentIndex > 0) {

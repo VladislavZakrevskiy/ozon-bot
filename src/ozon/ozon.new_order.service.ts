@@ -15,8 +15,6 @@ export class OzonService {
     private ozonImagesService: OzonImagesService,
   ) {}
 
-  // */30 * * * * *
-  // TODO поменять */5 * * * *
   @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
     console.log('ping ozon');
@@ -58,19 +56,6 @@ export class OzonService {
     return newOrders;
   }
 
-  async getProdutPic(data: { offer_id?: string; product_id?: number; sku?: number }) {
-    const images = await this.http.axiosRef.post<{
-      result: { images: string[] };
-    }>(`${process.env.OZON_API}/v2/product/info`, data, {
-      headers: {
-        'Client-Id': process.env.OZON_CLIENT_ID,
-        'Api-Key': process.env.OZON_API_KEY,
-      },
-    });
-
-    return images.data.result.images;
-  }
-
   async getUniqueOrders(newOrder: OzonOrder) {
     const uniqueOrders: Omit<Order, 'id'>[] = [];
 
@@ -101,7 +86,7 @@ export class OzonService {
         }
       }
       if (isUnique) {
-        const image_urls = await this.getProdutPic({
+        const image_urls = await this.ozonImagesService.getImage({
           offer_id: newOrder.offer_id,
           product_id: Number(newOrder.product_id),
           sku: newOrder.sku,

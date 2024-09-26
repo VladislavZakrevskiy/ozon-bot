@@ -36,9 +36,8 @@ export class BotHelpService {
   @UseGuards(AuthGuard)
   @Command('help')
   async help(ctx: SessionContext) {
-    const employee_level = (
-      await this.redis.get<User>(getRedisKeys('user', ctx.chat.id))
-    ).employee_level;
+    const employee_level = (await this.redis.get<User>(getRedisKeys('user', ctx.chat.id)))
+      .employee_level;
 
     ctx.reply(helpMessage[employee_level]);
   }

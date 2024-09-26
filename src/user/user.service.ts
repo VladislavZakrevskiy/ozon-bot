@@ -13,11 +13,7 @@ export class UserService {
   ) {}
 
   // Auth operations
-  async saveToken(
-    id: string,
-    token: string,
-    type: 'register' | 'login' = 'login',
-  ) {
+  async saveToken(id: string, token: string, type: 'register' | 'login' = 'login') {
     if (type == 'login') {
       const updatedToken = await this.prisma.refreshToken.update({
         where: { user_id: id },
@@ -101,16 +97,29 @@ export class UserService {
   }
 
   async deleteUser(id: string): Promise<User> {
-    return this.prisma.user.delete({
+    await this.prisma.refreshToken.delete({ where: { user_id: id } });
+
+    return await this.prisma.user.delete({
       where: { id },
     });
   }
 
+  async countMoney(user_id: string) {
+    const user = await this.findUserById(user_id);
+    delete user.id;
+
+    const updatedUser = await this.updateUser(user_id, {
+      ...user,
+      money: 0,
+      count_date: new Date(),
+      count_money: user.money,
+    });
+
+    return updatedUser;
+  }
+
   // Find
-  async findUserByRole(
-    role: EmployeeLevel | EmployeeLevel[],
-    withOrders: boolean = false,
-  ) {
+  async findUserByRole(role: EmployeeLevel | EmployeeLevel[], withOrders: boolean = false) {
     const users = await this.prisma.user.findMany({
       where: { employee_level: typeof role === 'object' ? { in: role } : role },
       include: { orders: withOrders },
@@ -135,13 +144,7 @@ export class UserService {
     return user;
   }
 
-  async findUserByTgChat({
-    tg_chat_id,
-    tg_user_id,
-  }: {
-    tg_chat_id?: number;
-    tg_user_id?: number;
-  }) {
+  async findUserByTgChat({ tg_chat_id, tg_user_id }: { tg_chat_id?: number; tg_user_id?: number }) {
     const user = await this.prisma.user.findUnique({
       where: { tg_chat_id, tg_user_id },
     });

@@ -19,6 +19,8 @@ model User {
   post           String
   employee_level EmployeeLevel
   money          Int
+  count_date     DateTime?
+  count_money    Int?
   isApproved     Boolean
   orders         Order[]
   RefreshToken   RefreshToken?
@@ -28,8 +30,8 @@ model User {
 
 model Order {
   id                   String       @id @default(auto()) @map("_id") @db.ObjectId
-  product_id           Int      @unique  
-  offer_id             String        
+  product_id           Int          
+  offer_id             String 
   name                 String
   price                Int
   old_price            Int?

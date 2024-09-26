@@ -1,7 +1,7 @@
 import { $Enums, Order } from '@prisma/client';
 import { Return } from '../types/OzonReturn';
 
-export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price'> {
+export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price' | 'user_id'> {
   actions: string[];
   image_urls: string[];
   offer_id: string;
@@ -15,20 +15,11 @@ export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price'> {
   quantity: number;
   sku: number;
   total_discount_value: number = 0;
-  user_id = '';
   is_send = false;
   date: Date;
 
   constructor(data: Return, image_urls: string[]) {
-    const {
-      price,
-      product_name,
-      quantity,
-      product_id,
-      sku,
-      id,
-      last_free_waiting_day,
-    } = data;
+    const { price, product_name, quantity, product_id, sku, return_date } = data;
     this.actions = [];
     this.currency_code = 'RUB';
     this.product_id = product_id;
@@ -36,9 +27,8 @@ export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price'> {
     this.quantity = quantity;
     this.name = product_name;
     this.sku = sku;
-    this.date = new Date(last_free_waiting_day);
+    this.date = new Date(return_date);
     this.image_urls = image_urls;
     this.offer_id = '';
-    this.ozon_id = String(id);
   }
 }

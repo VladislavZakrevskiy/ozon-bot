@@ -27,6 +27,7 @@ export class BossProfileService extends BossParent {
       { url: photo_url.toString() },
       {
         caption: getDefaultText(user, 'new'),
+        parse_mode: 'MarkdownV2',
         reply_markup: {
           inline_keyboard: [
             [{ callback_data: 'boss_admin_users', text: 'Админы' }],

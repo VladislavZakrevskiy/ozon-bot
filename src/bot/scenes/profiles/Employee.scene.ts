@@ -8,7 +8,6 @@ import { OrderService } from 'src/order/order.service';
 import { ListManager } from '../../templates/ListManager';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
-import { OzonImagesService } from '../../../ozon/ozon.images.service';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
@@ -17,12 +16,15 @@ export class EmployeeProdfileService {
   constructor(
     private readonly userService: UserService,
     private readonly orderService: OrderService,
-    private readonly ozonImagesService: OzonImagesService,
     private redis: RedisService,
   ) {}
 
   // ListManager and some data
-  async getListManager(ctx: SessionSceneContext, process: OrderProcess) {
+  async getListManager(
+    ctx: SessionSceneContext,
+    process: OrderProcess,
+    withExtraButtons: boolean = true,
+  ) {
     const prefix = process === 'IN_WORK' ? 'work' : 'done';
 
     const currentIndex = Number(
@@ -38,7 +40,9 @@ export class EmployeeProdfileService {
       this.redis,
       orders,
       {
-        extraButtons: [[{ text: 'Сдать заказ', callback_data: 'end_order' }]],
+        extraButtons: withExtraButtons
+          ? [[{ text: 'Сдать заказ', callback_data: `end_order` }]]
+          : undefined,
         getText: (order) => getDefaultText(order, 'char'),
         getImage: async (order) => order.image_urls[0],
       },
@@ -63,6 +67,7 @@ export class EmployeeProdfileService {
       { url: photo_url.toString() },
       {
         caption: getDefaultText(user, 'new'),
+        parse_mode: 'MarkdownV2',
         reply_markup: {
           inline_keyboard: [
             [{ callback_data: 'done_orders', text: 'Выполненные' }],
@@ -80,6 +85,7 @@ export class EmployeeProdfileService {
     const { currentIndex, listManager, orders } = await this.getListManager(
       ctx,
       prefix === 'work' ? OrderProcess.IN_WORK : OrderProcess.DONE,
+      prefix === 'work',
     );
 
     if (currentIndex < orders.length - 1) {
@@ -99,6 +105,7 @@ export class EmployeeProdfileService {
     const { currentIndex, listManager } = await this.getListManager(
       ctx,
       prefix === 'work' ? OrderProcess.IN_WORK : OrderProcess.DONE,
+      prefix === 'work',
     );
 
     if (currentIndex > 0) {
@@ -114,7 +121,7 @@ export class EmployeeProdfileService {
 
   @Action('done_orders')
   async sendDoneOrders(@Ctx() ctx: SessionSceneContext) {
-    const { listManager, orders } = await this.getListManager(ctx, OrderProcess.DONE);
+    const { listManager, orders } = await this.getListManager(ctx, OrderProcess.DONE, false);
 
     if (orders.length === 0) {
       await ctx.reply('Выполненных заказов нет(');
@@ -136,8 +143,17 @@ export class EmployeeProdfileService {
     listManager.sendInitialMessage();
   }
 
-  // TODO
   // List Actions
   @Action('end_order')
-  endOrder() {}
+  async endOrder(@Ctx() ctx: SessionSceneContext) {
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const { listManager } = await this.getListManager(ctx, OrderProcess.IN_WORK);
+    const endedOrder = await this.orderService.endOrder(
+      (await listManager.currentItem()).id,
+      user_id,
+    );
+
+    await ctx.replyWithMarkdownV2(`Вы закончили данный заказ и заработали ${endedOrder.price}
+${getDefaultText(endedOrder, 'char')}`);
+  }
 }

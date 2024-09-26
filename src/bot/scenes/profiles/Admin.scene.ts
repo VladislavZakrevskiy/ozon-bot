@@ -29,10 +29,12 @@ export class AdminProfileService {
       {
         extraButtons: [
           [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             {
               text: 'Редактировать',
-              callback_data: 'admin_edit_employee',
-              web_app: `${process.env.WEBAPP_URL}`,
+              // callback_data: 'admin_edit_employee',
+              web_app: { url: `${process.env.WEBAPP_URL}` },
             },
           ],
           [{ text: 'Уволить', callback_data: 'admin_dismiss_employee' }],
@@ -62,6 +64,7 @@ export class AdminProfileService {
       { url: photo_url.toString() },
       {
         caption: getDefaultText(user, 'new'),
+        parse_mode: 'MarkdownV2',
         reply_markup: {
           inline_keyboard: [[{ callback_data: 'admin_employees', text: 'Сотрудники' }]],
         },
@@ -112,11 +115,32 @@ export class AdminProfileService {
     listManager.sendInitialMessage();
   }
 
-  // TODO
   // Employee Actions
   @Action('admin_dismiss_employee')
-  dismissEmployee() {}
+  async dismissEmployee(@Ctx() ctx: SessionSceneContext) {
+    const { users, currentIndex } = await this.getListManager(ctx);
+    const currentUser = users[currentIndex];
+
+    this.userService.deleteUser(currentUser.id);
+    await ctx.telegram.sendMessage(
+      currentUser.tg_chat_id,
+      'К сожалению, вы уволены, расчет будет произведен',
+    );
+    await ctx.replyWithMarkdownV2(`Уволен данный сотрудник:
+${getDefaultText(currentUser, 'char')}`);
+  }
 
   @Action('admin_give_money')
-  editEmployee() {}
+  async giveEmployee(@Ctx() ctx: SessionSceneContext) {
+    const { listManager } = await this.getListManager(ctx);
+    const currentUser = await listManager.currentItem();
+
+    const updatedUser = await this.userService.countMoney(currentUser.id);
+    await ctx.telegram.sendMessage(
+      currentUser.tg_user_id,
+      'Расчет выплат произведен, в ближайшие дни ожидайте зп',
+    );
+    await ctx.replyWithMarkdownV2(`Вы сделали перерасчет зп данному сотруднику:
+${getDefaultText(updatedUser, 'char')}`);
+  }
 }
