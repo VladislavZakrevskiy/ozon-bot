@@ -46,7 +46,7 @@ export class ListManager<T> {
     const buttons = [];
 
     if (this.current_index > 0) {
-      buttons.push({ text: '⬅ Назад', callback_data: `prev__${this.key}_${this.prefix}` });
+      buttons.push({ text: '⬅ Назад', callback_data: `prev_${this.key}_${this.prefix}` });
     }
 
     if (this.current_index < this.list.length - 1) {

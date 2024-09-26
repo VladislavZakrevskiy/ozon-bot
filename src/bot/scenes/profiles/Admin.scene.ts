@@ -33,7 +33,6 @@ export class AdminProfileService {
             // @ts-ignore
             {
               text: 'Редактировать',
-              // callback_data: 'admin_edit_employee',
               web_app: { url: `${process.env.WEBAPP_URL}` },
             },
           ],
