@@ -7,8 +7,7 @@ import { RedisService } from '../redis/redis.service';
 import { getRedisKeys } from '../redis/redisKeys';
 
 export const ROLES_KEY = 'roles';
-export const Roles = (...roles: EmployeeLevel[]) =>
-  SetMetadata(ROLES_KEY, roles);
+export const Roles = (...roles: EmployeeLevel[]) => SetMetadata(ROLES_KEY, roles);
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,10 +17,7 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const roles = this.reflector.get<EmployeeLevel[]>(
-      ROLES_KEY,
-      context.getHandler(),
-    );
+    const roles = this.reflector.get<EmployeeLevel[]>(ROLES_KEY, context.getHandler());
     if (!roles) {
       return true;
     }
@@ -30,9 +26,7 @@ export class RolesGuard implements CanActivate {
     const user = await this.redis.get<User>(getRedisKeys('user', ctx.chat.id));
 
     if (!user) {
-      await ctx.reply(
-        'Сначала вам нужно авторизоваться с помощью команды /login.',
-      );
+      await ctx.reply('Сначала вам нужно авторизоваться с помощью команды /login.');
       return false;
     }
 

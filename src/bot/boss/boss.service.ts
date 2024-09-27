@@ -13,7 +13,7 @@ export class BotBossService {
   @Command('boss-DONT_GO_THERE_PLEASE')
   async createBoss(@Ctx() ctx: SessionContext) {
     await ctx.reply(
-      'Привет, потенциальный админ! Убедись, что ты не вошел. Введи секретный код, пожалуйста после команды /secret_boss. Например, /secret_boss password',
+      'Привет, потенциальный босс! Убедись, что ты не вошел. Введи секретный код, пожалуйста после команды /secret_boss. Например, /secret_boss password',
     );
   }
 

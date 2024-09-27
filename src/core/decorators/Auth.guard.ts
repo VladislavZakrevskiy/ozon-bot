@@ -12,9 +12,7 @@ export class AuthGuard implements CanActivate {
     const userId = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
 
     if (!userId) {
-      await ctx.reply(
-        'Сначала вам нужно авторизоваться с помощью команды /login.',
-      );
+      await ctx.reply('Сначала вам нужно авторизоваться с помощью команды /login.');
       return false;
     }
 
