@@ -79,7 +79,7 @@ export class EmployeeProdfileService {
   }
 
   // List
-  @Action(/^next_currentIndex_employee_.*/)
+  @Action(/^next__currentIndex_employee_.*/)
   public async handleNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split('_')?.[3];
     const { currentIndex, listManager, orders } = await this.getListManager(
@@ -99,7 +99,7 @@ export class EmployeeProdfileService {
     }
   }
 
-  @Action(/^prev_currentIndex_employee_.*/)
+  @Action(/^prev__currentIndex_employee_.*/)
   public async handlePrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split('_')?.[3];
     const { currentIndex, listManager } = await this.getListManager(

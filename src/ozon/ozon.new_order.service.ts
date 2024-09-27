@@ -17,7 +17,6 @@ export class OzonService {
 
   @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
-    console.log('ping ozon');
     const orders = await this.getOrders();
     const uniqueOrders = await this.getUniqueOrders(orders.data);
     await this.updateDBData(uniqueOrders);

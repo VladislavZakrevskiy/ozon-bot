@@ -6,7 +6,11 @@ import { SessionSceneContext } from '../types/Scene';
 interface ListManagerOptions<T> {
   getText: (data: T) => string;
   getImage?: (data: T) => Promise<string>;
-  extraButtons?: { text: string; callback_data: string; web_app?: { url: string } }[][];
+  extraButtons?: {
+    text: string;
+    callback_data: string;
+    web_app?: (data: T) => { url: string };
+  }[][];
 }
 
 @Injectable()
@@ -46,7 +50,7 @@ export class ListManager<T> {
     const buttons = [];
 
     if (this.current_index > 0) {
-      buttons.push({ text: '⬅ Назад', callback_data: `prev_${this.key}_${this.prefix}` });
+      buttons.push({ text: '⬅ Назад', callback_data: `prev__${this.key}_${this.prefix}` });
     }
 
     if (this.current_index < this.list.length - 1) {
@@ -63,6 +67,7 @@ export class ListManager<T> {
     const text = await this.getText();
     const buttons = await this.getButtons();
     const image = await this.getImage();
+    const current_item = await this.currentItem();
 
     await this.redis.set(getRedisKeys(this.key, this.prefix, this.ctx.chat.id), 0);
 
@@ -73,7 +78,13 @@ export class ListManager<T> {
           callback_data: btn.callback_data,
         })),
         [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
-        ...(this.options.extraButtons || []),
+        ...(this.options.extraButtons.map((value) =>
+          value.map(({ callback_data, text, web_app }) => ({
+            callback_data,
+            text,
+            web_app: web_app?.(current_item),
+          })),
+        ) || []),
       ],
     };
 
@@ -95,6 +106,7 @@ export class ListManager<T> {
     const text = await this.getText();
     const buttons = await this.getButtons();
     const image = await this.getImage();
+    const current_item = await this.currentItem();
 
     const inlineKeyboard = {
       inline_keyboard: [
@@ -103,7 +115,13 @@ export class ListManager<T> {
           callback_data: btn.callback_data,
         })),
         [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
-        ...(this.options.extraButtons || []),
+        ...(this.options.extraButtons.map((value) =>
+          value.map(({ callback_data, text, web_app }) => ({
+            callback_data,
+            text,
+            web_app: web_app?.(current_item),
+          })),
+        ) || []),
       ],
     };
 
@@ -126,8 +144,6 @@ export class ListManager<T> {
           reply_markup: inlineKeyboard,
         });
       }
-    } catch (error) {
-      console.log('Ошибка при редактировании сообщения:', error);
-    }
+    } catch (error) {}
   }
 }

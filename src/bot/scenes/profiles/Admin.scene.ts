@@ -33,7 +33,7 @@ export class AdminProfileService {
             // @ts-ignore
             {
               text: 'Редактировать',
-              web_app: { url: `${process.env.WEBAPP_URL}` },
+              web_app: (user) => ({ url: `${process.env.WEBAPP_URL}/updateUser/${user.id}` }),
             },
           ],
           [{ text: 'Уволить', callback_data: 'admin_dismiss_employee' }],
@@ -72,7 +72,7 @@ export class AdminProfileService {
   }
 
   // List
-  @Action('next_currentIndex_admin_')
+  @Action('nex_t_currentIndex_admin_')
   public async handleNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const { currentIndex, listManager, users } = await this.getListManager(ctx);
 
@@ -87,7 +87,7 @@ export class AdminProfileService {
     }
   }
 
-  @Action('prev_currentIndex_admin_')
+  @Action('prev__currentIndex_admin_')
   public async handlePrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const { currentIndex, listManager } = await this.getListManager(ctx);
 

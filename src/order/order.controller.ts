@@ -19,10 +19,11 @@ export class OrderCotroller {
   }
 
   @Patch('/:id')
-  async updateOrder(
-    @Body() updateOrderDto: UpdateOrderDto,
-    @Param('id') id: string,
-  ) {
+  async updateOrder(@Body() updateOrderDto: UpdateOrderDto, @Param('id') id: string) {
+    updateOrderDto.date = new Date().toISOString();
+    updateOrderDto.price = Number(updateOrderDto.price);
+    updateOrderDto.sku = Number(updateOrderDto.sku);
+    updateOrderDto.quantity = Number(updateOrderDto.quantity);
     const updatedOrder = await this.orderService.updateOrder(id, {
       ...updateOrderDto,
     });

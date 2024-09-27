@@ -1,5 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { JwtService } from './jwt/jwt.service';
+import * as crypto from 'crypto';
 
 @Controller('auth')
 export class AuthController {
@@ -15,5 +16,19 @@ export class AuthController {
     });
 
     return { access_token: newAccessToken };
+  }
+
+  @Post('/hash')
+  getHash(@Body() { dataCheckString }: { dataCheckString: string }) {
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(process.env.TELEGRAM_BOT_TOKEN)
+      .digest();
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+
+    return { hash: calculatedHash };
   }
 }

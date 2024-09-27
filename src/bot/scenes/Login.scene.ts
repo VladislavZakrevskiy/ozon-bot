@@ -17,7 +17,8 @@ export class LoginScene {
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SessionSceneContext) {
-    await ctx.reply('Пожалуйста, введите вашу почту:');
+    await ctx.reply(`Пожалуйста, введите вашу почту:
+При небходимости отменить авторизацию напишите /cancel`);
     ctx.scene.session.state = {};
   }
 
@@ -31,14 +32,32 @@ export class LoginScene {
   async onText(@Ctx() ctx: SessionSceneContext) {
     const state = ctx.scene.session.state as any;
 
+    // Регулярное выражение для валидации почты
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!state.login) {
-      state.login = ctx.text;
+      const email = ctx.text;
+
+      if (!emailRegex.test(email)) {
+        await ctx.reply(
+          'Неверный формат почты. Пожалуйста, введите корректный адрес электронной почты:',
+        );
+        return;
+      }
+
+      state.login = email;
       await ctx.reply('Теперь введите ваш пароль:');
     } else {
       const password = ctx.text;
 
+      if (password.length < 4) {
+        await ctx.reply('Пароль должен содержать минимум 4 символов. Попробуйте снова:');
+        return;
+      }
+
       const user = await this.userService.validateUser(state.login, password);
       if (user) {
+        // Сохраняем данные пользователя в Redis
         await this.redis.set(getRedisKeys('user_id', ctx.chat.id), user.candidate.id);
         await this.redis.set(getRedisKeys('user', ctx.chat.id), user.candidate);
         await this.redis.set(getRedisKeys('refresh_token', ctx.chat.id), user.refresh_token);
@@ -48,7 +67,9 @@ export class LoginScene {
         await ctx.scene.leave();
       } else {
         await ctx.reply('Неверный логин или пароль, попробуйте снова.');
-        await ctx.scene.reenter();
+        // Сбрасываем введенные данные, чтобы пользователь ввел их заново
+        state.login = null;
+        await ctx.reply('Пожалуйста, введите вашу почту:');
       }
     }
   }

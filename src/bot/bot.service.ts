@@ -14,8 +14,6 @@ export class BotService {
 
   @Start()
   async startCommand(@Ctx() ctx: SessionContext) {
-    console.log(ctx.chat.id); // 1415216558
-    console.log(ctx.from.id); // 1415216558
     await ctx.reply(
       'Добро пожаловать! Используйте /login для авторизации, /register для регистрации',
     );
@@ -34,8 +32,10 @@ export class BotService {
   @UseGuards(AuthGuard)
   @Command('logout')
   async logout(@Ctx() ctx: Scenes.SceneContext) {
-    this.redis.delete(getRedisKeys('user', ctx.chat.id));
-    this.redis.delete(getRedisKeys('user_id', ctx.chat.id));
-    this.redis.delete(getRedisKeys('user', ctx.chat.id));
+    await this.redis.delete(getRedisKeys('user', ctx.chat.id));
+    await this.redis.delete(getRedisKeys('user_id', ctx.chat.id));
+    await this.redis.delete(getRedisKeys('user', ctx.chat.id));
+
+    await ctx.reply('Вы вышли, возвращайтесь!');
   }
 }

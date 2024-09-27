@@ -48,12 +48,11 @@ import { join } from 'path';
       type: 'single',
       url: 'redis://localhost:6379',
     }),
-  ],
-  providers: [
-    // Modules
     UserModule,
     OrderModule,
     AuthModule,
+  ],
+  providers: [
     // Api Services
     PrismaService,
     OrderService,

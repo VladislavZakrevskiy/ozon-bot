@@ -17,10 +17,8 @@ export class OzonReturnService {
 
   @Cron(process.env.OZON_PING_STEP)
   async pingOzon() {
-    console.log('ping returns');
     const orders = await this.getReturns();
     const uniqueOrders = await this.getUniqueOrders(orders.data);
-    console.log(uniqueOrders);
     await this.updateDBData(uniqueOrders);
   }
 
@@ -81,12 +79,10 @@ export class OzonReturnService {
   }
 
   async updateDBData(uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id'>[]) {
-    console.log(uniqueOrders.length, 'uniqueOrders.length');
     if (uniqueOrders.length !== 0) {
       const products = await this.prisma.order.createMany({
         data: uniqueOrders.map((order) => ({ ...order, proccess: OrderProcess.RETURN })),
       });
-      console.log(products);
       return products;
     }
     return [];

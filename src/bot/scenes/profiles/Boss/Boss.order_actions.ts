@@ -26,7 +26,6 @@ export class BossOrderActions extends BossParent {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
     )?.[4] as OrderProcess;
-    console.log((ctx.callbackQuery as CallbackQuery.DataQuery).data.split('_'));
     const { currentIndex, listManager, orders } = await this.getOrdersListManager(ctx, prefix);
 
     if (currentIndex < orders.length - 1) {

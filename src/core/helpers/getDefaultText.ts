@@ -1,5 +1,6 @@
 import { EmployeeLevel, Order, OrderProcess, User } from '@prisma/client';
 import { isOrder } from './isType';
+import { escapeMarkdown } from './escapeMarkdown';
 
 const processStatuses: Record<OrderProcess, string> = {
   FREE: 'Свободен',
@@ -46,7 +47,7 @@ ${onReturns?.length !== 0 ? `На складе возвратов: ${onReturns?.
 
 const getHelloUser = (
   user: User,
-) => `Привет, ${roleTranslation[user.employee_level]}\\! Вот ваш профиль:
+) => `Привет, ${roleTranslation[user.employee_level]}! Вот ваш профиль:
 Имя: ${user.first_name}
 Фамилия: ${user.last_name}
 Email: ${user.login}
@@ -56,7 +57,7 @@ Email: ${user.login}
 
 ${user.money ? `Заработанные деньги: ${user.money}` : ''}
 ${user.count_date ? `Последний перерасчет: ${user.count_date}` : ''}
-${user.count_money ? `Сумма последнего перерасчета: ${user.count_date.toLocaleDateString().replaceAll('.', `\\\\`)}` : ''}
+${user.count_money ? `Сумма последнего перерасчета: ${user.count_date}` : ''}
 `;
 
 const getCharUser = (user: User) => `Имя: ${user.first_name}
@@ -68,7 +69,7 @@ Email: ${user.login}
 Подтвержден: ${user.isApproved ? 'Да' : 'Нет'}
 
 ${user.money ? `Деньги: ${user.money}` : ''}
-${user.count_date ? `Последний перерасчет: ${user.count_date.toLocaleDateString().replaceAll('.', `\\\\`)}` : ''}
+${user.count_date ? `Последний перерасчет: ${user.count_date}` : ''}
 ${user.count_money ? `Сумма последнего перерасчета: ${user.count_money}` : ''}
 `;
 
@@ -82,13 +83,13 @@ export function getDefaultText(
   if (isOrder(data)) {
     switch (type) {
       case 'char':
-        return getCharOrder(data, onReturns);
+        return escapeMarkdown(getCharOrder(data, onReturns));
       case 'new':
-        return getNewOrder(data, onReturns);
+        return escapeMarkdown(getNewOrder(data, onReturns));
       default:
-        return getCharOrder(data, onReturns);
+        return escapeMarkdown(getCharOrder(data, onReturns));
     }
   }
 
-  return type === 'char' ? getCharUser(data) : getHelloUser(data);
+  return type === 'char' ? escapeMarkdown(getCharUser(data)) : escapeMarkdown(getHelloUser(data));
 }

@@ -27,13 +27,11 @@ export class BotEmployeeService {
       is_send: false,
     });
     const employees = await this.userService.findUserByRole(EmployeeLevel.EMPLOYEE);
-    console.log(newOrders.length, employees.length);
 
     for (const employee of employees) {
       for (const newOrder of newOrders) {
         try {
           const returns = await this.orderService.getOrdersOnReturns(newOrder.name);
-          console.log('orders', newOrder.proccess);
 
           const { message_id } = await this.bot.telegram.sendPhoto(
             employee.tg_chat_id,
@@ -60,7 +58,6 @@ export class BotEmployeeService {
             message_id,
           );
         } catch (error) {
-          console.log(error?.error_code);
           if (error?.error_code == 403) {
             const employee_index = employees.findIndex(({ id }) => id === employee.id);
             employees.splice(employee_index, 1);
