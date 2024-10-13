@@ -90,9 +90,4 @@ export class BossOrderActions extends BossParent {
 
     listManager.sendInitialMessage();
   }
-
-  // TODO
-  // OrderList Actions
-  @Action('make_returns')
-  makeReturns() {}
 }

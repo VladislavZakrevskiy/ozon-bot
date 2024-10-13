@@ -7,6 +7,7 @@ import { SessionSceneContext } from 'src/bot/types/Scene';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
 import { EmployeeLevel } from '@prisma/client';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
+import { getDefaultText } from 'src/core/helpers/getDefaultText';
 
 @Update()
 export class BossUserActions extends BossParent {
@@ -44,7 +45,6 @@ export class BossUserActions extends BossParent {
     )?.[4] as EmployeeLevel;
     const { currentIndex, listManager } = await this.getUsersListManager(ctx, prefix);
     if (currentIndex > 0) {
-      console.log('ABOBA');
       await this.redis.set(
         getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id),
         currentIndex - 1,
@@ -89,5 +89,34 @@ export class BossUserActions extends BossParent {
     }
 
     listManager.sendInitialMessage();
+  }
+
+  // Employee Actions
+  @Action('admin_dismiss_employee')
+  async dismissEmployee(@Ctx() ctx: SessionSceneContext) {
+    const { users, currentIndex } = await this.getUsersListManager(ctx);
+    const currentUser = users[currentIndex];
+
+    this.userService.deleteUser(currentUser.id);
+    await ctx.telegram.sendMessage(
+      currentUser.tg_chat_id,
+      'К сожалению, вы уволены, расчет будет произведен',
+    );
+    await ctx.replyWithMarkdownV2(`Уволен данный сотрудник:
+ ${getDefaultText(currentUser, 'char')}`);
+  }
+
+  @Action('admin_give_money')
+  async giveEmployee(@Ctx() ctx: SessionSceneContext) {
+    const { listManager } = await this.getUsersListManager(ctx);
+    const currentUser = await listManager.currentItem();
+
+    const updatedUser = await this.userService.countMoney(currentUser.id);
+    await ctx.telegram.sendMessage(
+      currentUser.tg_user_id,
+      'Расчет выплат произведен, в ближайшие дни ожидайте зп',
+    );
+    await ctx.replyWithMarkdownV2(`Вы сделали перерасчет зп данному сотруднику:
+ ${getDefaultText(updatedUser, 'char')}`);
   }
 }
