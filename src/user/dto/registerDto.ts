@@ -6,4 +6,5 @@ export interface RegisterDto {
   phone_number: string;
   tg_chat_id: number;
   tg_user_id: number;
+  tg_username: string;
 }

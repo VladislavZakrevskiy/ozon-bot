@@ -78,7 +78,7 @@ export class ListManager<T> {
           callback_data: btn.callback_data,
         })),
         [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
-        ...(this.options.extraButtons.map((value) =>
+        ...(this.options?.extraButtons?.map((value) =>
           value.map(({ callback_data, text, web_app }) => ({
             callback_data,
             text,
@@ -89,11 +89,14 @@ export class ListManager<T> {
     };
 
     if (image) {
-      await this.ctx.replyWithPhoto(image, {
-        caption: text,
-        parse_mode: 'MarkdownV2',
-        reply_markup: inlineKeyboard,
-      });
+      await this.ctx.replyWithPhoto(
+        { url: image },
+        {
+          caption: text,
+          parse_mode: 'MarkdownV2',
+          reply_markup: inlineKeyboard,
+        },
+      );
     } else {
       await this.ctx.reply(text, {
         reply_markup: inlineKeyboard,
@@ -115,7 +118,7 @@ export class ListManager<T> {
           callback_data: btn.callback_data,
         })),
         [{ text: `${this.current_index + 1}/${this.list.length}`, callback_data: 'number string' }],
-        ...(this.options.extraButtons.map((value) =>
+        ...(this.options?.extraButtons?.map((value) =>
           value.map(({ callback_data, text, web_app }) => ({
             callback_data,
             text,

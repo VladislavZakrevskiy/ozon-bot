@@ -7,9 +7,7 @@ import { SessionSceneContext } from 'src/bot/types/Scene';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
 import { EmployeeLevel } from '@prisma/client';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
-import { Injectable } from '@nestjs/common';
 
-@Injectable()
 @Update()
 export class BossUserActions extends BossParent {
   constructor(
@@ -46,6 +44,7 @@ export class BossUserActions extends BossParent {
     )?.[4] as EmployeeLevel;
     const { currentIndex, listManager } = await this.getUsersListManager(ctx, prefix);
     if (currentIndex > 0) {
+      console.log('ABOBA');
       await this.redis.set(
         getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id),
         currentIndex - 1,

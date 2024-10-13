@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EmployeeLevel, OrderProcess } from '@prisma/client';
 import { Action, Ctx, InjectBot, Update } from 'nestjs-telegraf';
@@ -10,7 +9,6 @@ import { Telegraf } from 'telegraf';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
 
-@Injectable()
 @Update()
 export class BotEmployeeService {
   constructor(
@@ -32,31 +30,33 @@ export class BotEmployeeService {
       for (const newOrder of newOrders) {
         try {
           const returns = await this.orderService.getOrdersOnReturns(newOrder.name);
-
-          const { message_id } = await this.bot.telegram.sendPhoto(
-            employee.tg_chat_id,
-            { url: newOrder.image_urls[0] },
-            {
-              caption: getDefaultText(newOrder, 'new', returns),
-              parse_mode: 'MarkdownV2',
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: returns.length === 0 ? `Взять в работу\!` : `Забрать со склада\!`,
-                      callback_data:
-                        returns.length === 0 ? 'go_to_work_order' : 'take_from_warehouse',
-                    },
+          const isAuth = await this.redis.get(getRedisKeys('user', employee.tg_chat_id));
+          if (isAuth) {
+            const { message_id } = await this.bot.telegram.sendPhoto(
+              employee.tg_chat_id,
+              { url: newOrder.image_urls[0] },
+              {
+                caption: getDefaultText(newOrder, 'new', returns),
+                parse_mode: 'MarkdownV2',
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: returns.length === 0 ? `Взять в работу\!` : `Забрать со склада\!`,
+                        callback_data:
+                          returns.length === 0 ? 'go_to_work_order' : 'take_from_warehouse',
+                      },
+                    ],
                   ],
-                ],
+                },
               },
-            },
-          );
+            );
 
-          await this.redis.set(
-            getRedisKeys('orderToDelete', newOrder.id, employee.tg_chat_id),
-            message_id,
-          );
+            await this.redis.set(
+              getRedisKeys('orderToDelete', newOrder.id, employee.tg_chat_id),
+              message_id,
+            );
+          }
         } catch (error) {
           if (error?.error_code == 403) {
             const employee_index = employees.findIndex(({ id }) => id === employee.id);
@@ -68,8 +68,13 @@ export class BotEmployeeService {
 
     for (const order of newOrders) {
       delete order.id;
+      delete order.category_id;
+      delete order.user_id;
+
       await this.orderService.updateOrder(order.product_id, {
         ...order,
+        user: {},
+        category: { connect: { id: order.category.id } },
         is_send: true,
       });
     }
@@ -92,6 +97,7 @@ export class BotEmployeeService {
     await this.orderService.updateOrder(current_order_id, {
       ...current_order,
       user: { connect: { id: current_user_id } },
+      category: { connect: { id: current_order.category_id } },
       proccess: OrderProcess.IN_WORK,
     });
 
@@ -128,6 +134,7 @@ export class BotEmployeeService {
     await this.orderService.updateOrder(current_order_id, {
       ...current_order,
       user: { connect: { id: current_user_id } },
+      category: { connect: { id: current_order.category_id } },
       proccess: OrderProcess.DONE,
     });
 

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Ctx, Action, Update } from 'nestjs-telegraf';
 import { UserService } from 'src/user/user.service';
 import { SessionSceneContext } from 'src/bot/types/Scene';
@@ -9,7 +8,6 @@ import { getRedisKeys } from 'src/core/redis/redisKeys';
 import { ListManager } from 'src/bot/templates/ListManager';
 import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 
-@Injectable()
 @Update()
 export class AdminProfileService {
   constructor(
@@ -72,19 +70,15 @@ export class AdminProfileService {
   }
 
   // List
-  @Action('nex_t_currentIndex_admin_')
+  @Action('next__currentIndex_admin_')
   public async handleNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
-    const { currentIndex, listManager, users } = await this.getListManager(ctx);
+    const { currentIndex, listManager } = await this.getListManager(ctx);
 
-    if (currentIndex < users.length - 1) {
-      await this.redis.set(
-        getRedisKeys('currentIndex_admin', listManager.prefix, ctx.chat.id),
-        currentIndex + 1,
-      );
-      await listManager.editMessage();
-    } else {
-      await ctx.answerCbQuery('Нет следующего элемента');
-    }
+    await this.redis.set(
+      getRedisKeys('currentIndex_admin', listManager.prefix, ctx.chat.id),
+      currentIndex + 1,
+    );
+    await listManager.editMessage();
   }
 
   @Action('prev__currentIndex_admin_')

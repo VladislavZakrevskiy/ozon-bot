@@ -1,7 +1,7 @@
 import { $Enums, Order } from '@prisma/client';
 import { Return } from '../types/OzonReturn';
 
-export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price' | 'user_id'> {
+export class OzonReturnDTO implements Omit<Order, 'id' | 'old_price' | 'user_id' | 'category_id'> {
   actions: string[];
   image_urls: string[];
   offer_id: string;

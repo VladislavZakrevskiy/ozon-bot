@@ -60,8 +60,13 @@ export class BossParent {
             // @ts-ignore
             {
               text: 'Редактировать',
-              // callback_data: 'empty_cb_data',
               web_app: (order) => ({ url: `${process.env.WEBAPP_URL}/updateOrder/${order.id}` }),
+            },
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            {
+              text: 'Найти 🔎',
+              web_app: () => ({ url: `${process.env.WEBAPP_URL}/find` }),
             },
           ],
           [{ text: 'Сделать возвратом', callback_data: 'make_returns' }],

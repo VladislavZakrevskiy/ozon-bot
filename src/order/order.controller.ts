@@ -1,18 +1,30 @@
-import { Post, Get, Patch, Param, Body, Controller } from '@nestjs/common';
+import { Post, Get, Patch, Param, Body, Controller, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { AddOrderDto } from './dto/api/AddOrderDTO';
 import { UpdateOrderDto } from './dto/api/UpdateOrderDTO';
+import { CategoryService } from './category.service';
 
 @Controller('order')
 export class OrderCotroller {
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private categoryService: CategoryService,
+  ) {}
+
+  @Get('find')
+  async findOrder(@Query('q') searchString: string) {
+    const orders = await this.orderService.findManyByParameter({
+      q: searchString,
+    });
+
+    return orders;
+  }
 
   @Post('add')
   async addOrder(@Body() createOrderDto: AddOrderDto) {
     const order = await this.orderService.createOrder({
       ...createOrderDto,
       is_send: false,
-      user_id: undefined,
     });
 
     return order;
@@ -35,5 +47,11 @@ export class OrderCotroller {
   async getOrderById(@Param('id') id: string) {
     const order = await this.orderService.findOneByParameter({ id });
     return order;
+  }
+
+  @Post('/category')
+  async updateCategory() {
+    const categories = await this.categoryService.addAllCategories();
+    return categories;
   }
 }

@@ -33,6 +33,7 @@
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "crypto": "^1.0.1",
+    "exceljs": "^4.4.0",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "nestjs-telegraf": "^2.8.1",

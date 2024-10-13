@@ -1,7 +1,7 @@
 export function escapeMarkdown(text: string) {
   const escapeChars = [
     '_',
-    '*',
+    // '*',
     '[',
     ']',
     '(',

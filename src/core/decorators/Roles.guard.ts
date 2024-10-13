@@ -18,6 +18,7 @@ export class RolesGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.get<EmployeeLevel[]>(ROLES_KEY, context.getHandler());
+    console.log(roles);
     if (!roles) {
       return true;
     }
@@ -29,6 +30,8 @@ export class RolesGuard implements CanActivate {
       await ctx.reply('Сначала вам нужно авторизоваться с помощью команды /login.');
       return false;
     }
+
+    console.log(user.employee_level);
 
     const isRoleCorrect = roles.includes(user.employee_level);
 

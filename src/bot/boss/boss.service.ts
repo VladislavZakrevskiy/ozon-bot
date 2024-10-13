@@ -1,11 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import { Command, Ctx, Update } from 'nestjs-telegraf';
 import { SessionContext } from '../types/Scene';
 import { UserService } from 'src/user/user.service';
 import { $Enums } from '@prisma/client';
 import { hashSync } from 'bcrypt';
 
-@Injectable()
 @Update()
 export class BotBossService {
   constructor(private userService: UserService) {}
@@ -39,6 +37,7 @@ export class BotBossService {
           phone_number: '89999999999',
           tg_chat_id: ctx.chat.id,
           tg_user_id: ctx.from.id,
+          tg_username: ctx.from.username,
         });
       }
       await ctx.reply('Приветсвуем, босс!');

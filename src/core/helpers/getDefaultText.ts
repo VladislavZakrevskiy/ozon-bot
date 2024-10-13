@@ -1,4 +1,4 @@
-import { EmployeeLevel, Order, OrderProcess, User } from '@prisma/client';
+import { EmployeeLevel, Order, OrderProcess, User, Category } from '@prisma/client';
 import { isOrder } from './isType';
 import { escapeMarkdown } from './escapeMarkdown';
 
@@ -14,40 +14,43 @@ const roleTranslation: Record<EmployeeLevel, string> = {
   BOSS: 'Босс',
   EMPLOYEE: 'Сотрудник',
   ENEMY: 'Крип',
-  SUPER_ADMIN: 'Супер админ',
 };
 
 type MessageType = 'new' | 'char';
 
-const getNewOrder = (
-  order: Order,
+const getNewOrder = (order: Order & { category: Category }, onReturns?: Order[]) => `#новыйзаказ
+Новый ${order.proccess === 'RETURN' ? 'возврат' : 'заказ'} номер \`\`\`${order.id}\`\`\`
+Наименование товара: *${order.name}*
+Категория: *${order.category.name}*
+Количество: *${order.quantity}*
+Цена за единицу: *${order.price} ${order.currency_code}*
+Цена за упаковку: *${order.category.money}руб*
+${order.old_price ? `Старая цена: *${order.old_price} ${order.currency_code}*` : ''}
+Статус: *${processStatuses[order.proccess]}*
+Экстренный: *${order.is_express ? 'Да' : 'Нет'}*
+SKU: *${order.sku}*
+
+${onReturns?.length !== 0 ? `На складе возвратов: *${onReturns?.length || 0}` : ''}*`;
+
+const getCharOrder = (
+  order: Order & { category: Category },
   onReturns?: Order[],
-) => `Новый ${order.proccess === 'RETURN' ? 'возврат' : 'заказ'} номер \`\`\`${order.id}\`\`\`
-Наименование товара: ${order.name}
-Количество: ${order.quantity}
-Цена: ${order.price} ${order.currency_code}
-${order.old_price ? `Старая цена: ${order.old_price} ${order.currency_code}` : ''}
-Статус: ${processStatuses[order.proccess]}
-Экстренный: ${order.is_express ? 'Да' : 'Нет'}
-SKU: ${order.sku}
-
-${onReturns?.length !== 0 ? `На складе возвратов: ${onReturns?.length || 0}` : ''}`;
-
-const getCharOrder = (order: Order, onReturns?: Order[]) => `ID товара: \`\`\`${order.id}\`\`\`
-Наименование товара: ${order.name}
-Количество: ${order.quantity}
-Цена: ${order.price} ${order.currency_code}
-${order.old_price ? `Старая цена: ${order.old_price} ${order.currency_code}` : ''}
-Статус: ${processStatuses[order.proccess]}
-Экстренный: ${order.is_express ? 'Да' : 'Нет'}
-SKU: ${order.sku}
+) => `ID товара: \`\`\`${order.id}\`\`\`
+Наименование товара: *${order.name}*
+Категория: *${order.category.name}*
+Количество: *${order.quantity}*
+Цена за единицу: *${order.price} ${order.currency_code}*
+Цена за упаковку: *${order.category.money}руб*
+${order.old_price ? `Старая цена: *${order.old_price} ${order.currency_code}*` : ''}
+Статус: *${processStatuses[order.proccess]}*
+Экстренный: *${order.is_express ? 'Да' : 'Нет'}*
+SKU: *${order.sku}*
 
 ${onReturns?.length !== 0 ? `На складе возвратов: ${onReturns?.length || 0}` : ''}
 `;
 
-const getHelloUser = (
-  user: User,
-) => `Привет, ${roleTranslation[user.employee_level]}! Вот ваш профиль:
+const getHelloUser = (user: User) => `#профиль
+Привет, ${roleTranslation[user.employee_level]}! Вот ваш профиль:
 Имя: ${user.first_name}
 Фамилия: ${user.last_name}
 Email: ${user.login}
@@ -74,9 +77,13 @@ ${user.count_money ? `Сумма последнего перерасчета: ${
 `;
 
 export function getDefaultText(data: User, type: MessageType): string;
-export function getDefaultText(data: Order, type: MessageType, onReturns?: Order[]): string;
 export function getDefaultText(
-  data: User | Order,
+  data: Order & { category: Category },
+  type: MessageType,
+  onReturns?: Order[],
+): string;
+export function getDefaultText(
+  data: User | (Order & { category: Category }),
   type: 'new' | 'char' | 'return' = 'new',
   onReturns?: Order[],
 ) {

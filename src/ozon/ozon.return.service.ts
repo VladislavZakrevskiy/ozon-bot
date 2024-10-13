@@ -1,11 +1,12 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { Order, OrderProcess } from '@prisma/client';
+import { Order } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
 import { OzonReturn } from './types/OzonReturn';
 import { OzonReturnDTO } from './dto/OzonReturnDTO';
 import { OzonImagesService } from './ozon.images.service';
+import { OrderService } from '../order/order.service';
 
 @Injectable()
 export class OzonReturnService {
@@ -13,6 +14,7 @@ export class OzonReturnService {
     private prisma: PrismaService,
     private http: HttpService,
     private ozonImagesService: OzonImagesService,
+    private orderService: OrderService,
   ) {}
 
   @Cron(process.env.OZON_PING_STEP)
@@ -51,11 +53,14 @@ export class OzonReturnService {
   }
 
   async getUniqueOrders(newOrder: OzonReturn) {
-    const uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id'>[] = [];
+    const uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id' | 'category_id'>[] = [];
 
-    const newOrders = newOrder.returns.map((ret) => new OzonReturnDTO(ret, []));
+    const newOrders = newOrder.returns.map(
+      (ret) =>
+        new OzonReturnDTO(ret, []) as Omit<Order, 'id' | 'old_price' | 'category_id' | 'user_id'>,
+    );
 
-    const oldOrders = await this.prisma.order.findMany();
+    const oldOrders = await this.prisma.order.findMany({ include: { category: true } });
 
     for (const newOrder of newOrders) {
       let isUnique: boolean = true;
@@ -78,11 +83,9 @@ export class OzonReturnService {
     return uniqueOrders;
   }
 
-  async updateDBData(uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id'>[]) {
+  async updateDBData(uniqueOrders: Omit<Order, 'id' | 'old_price' | 'user_id' | 'category_id'>[]) {
     if (uniqueOrders.length !== 0) {
-      const products = await this.prisma.order.createMany({
-        data: uniqueOrders.map((order) => ({ ...order, proccess: OrderProcess.RETURN })),
-      });
+      const products = await this.orderService.createOrders(uniqueOrders);
       return products;
     }
     return [];

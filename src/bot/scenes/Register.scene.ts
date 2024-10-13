@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Ctx, Scene, SceneEnter, Command, On } from 'nestjs-telegraf';
 import { Scenes } from 'telegraf';
 import { Scenes as ScenesEnum } from '../types/Scenes';
@@ -11,7 +10,6 @@ import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^\+7\d{10}$/;
 
-@Injectable()
 @Scene(ScenesEnum.REGISTER)
 export class RegisterScene {
   constructor(private readonly userService: UserService) {}
@@ -76,12 +74,13 @@ export class RegisterScene {
         phone_number: state.phone_number || '',
         tg_chat_id: ctx.message.chat.id,
         tg_user_id: ctx.from.id,
+        tg_username: ctx.from.username,
       });
 
       await ctx.reply('Регистрация успешно завершена! Ожидайте одобрения админом!');
 
       const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
-      const photo_url = getTelegramImage(ctx, user.tg_user_id);
+      const photo_url = await getTelegramImage(ctx, user.tg_user_id);
 
       await ctx.telegram.sendPhoto(
         Number(boss[0].tg_chat_id),
@@ -94,7 +93,7 @@ export class RegisterScene {
 Логин: ${user.login}
 Номер телефона: ${user.phone_number || 'Нет'}
 Телеграм ник: @${ctx.from.username || 'Нет'}
-Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name}`,
+Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name ? ctx.from.last_name : ''}`,
           reply_markup: {
             inline_keyboard: [
               [{ text: 'Админ', callback_data: 'admin' }],

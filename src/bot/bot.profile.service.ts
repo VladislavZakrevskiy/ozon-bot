@@ -1,4 +1,4 @@
-import { Injectable, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Command, Ctx, Update } from 'nestjs-telegraf';
 import { SessionSceneContext } from './types/Scene';
 import { EmployeeLevel } from '@prisma/client';
@@ -10,7 +10,6 @@ import { EmployeeProdfileService } from './scenes/profiles/Employee.scene';
 import { BossProfileService } from './scenes/profiles/Boss/Boss.scene';
 import { AdminProfileService } from './scenes/profiles/Admin.scene';
 
-@Injectable()
 @Update()
 export class BotProfileService {
   constructor(
@@ -21,8 +20,8 @@ export class BotProfileService {
     private adminProfileService: AdminProfileService,
   ) {}
 
-  @Command('profile')
   @UseGuards(AuthGuard)
+  @Command('profile')
   async profileByRole(@Ctx() ctx: SessionSceneContext) {
     const user_id = await this.redis.get<string>(getRedisKeys('user_id', ctx.chat.id));
     const user = await this.prisma.user.findUnique({

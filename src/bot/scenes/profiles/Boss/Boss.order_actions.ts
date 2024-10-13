@@ -7,9 +7,7 @@ import { SessionSceneContext } from 'src/bot/types/Scene';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
 import { OrderProcess } from '@prisma/client';
-import { Injectable } from '@nestjs/common';
 
-@Injectable()
 @Update()
 export class BossOrderActions extends BossParent {
   constructor(

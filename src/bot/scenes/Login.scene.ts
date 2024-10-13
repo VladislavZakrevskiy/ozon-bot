@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Ctx, Scene, SceneEnter, Command, On } from 'nestjs-telegraf';
 import { Scenes } from 'telegraf';
 import { Scenes as ScenesEnum } from '../types/Scenes';
@@ -7,7 +6,6 @@ import { UserService } from 'src/user/user.service';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
 
-@Injectable()
 @Scene(ScenesEnum.LOGIN)
 export class LoginScene {
   constructor(

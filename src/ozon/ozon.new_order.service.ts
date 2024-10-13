@@ -6,6 +6,7 @@ import { OzonOrderDTO } from './dto/OzonOrderDTO';
 import { Order, OrderProcess } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
 import { OzonImagesService } from './ozon.images.service';
+import { OrderService } from 'src/order/order.service';
 
 @Injectable()
 export class OzonService {
@@ -13,6 +14,7 @@ export class OzonService {
     private prisma: PrismaService,
     private http: HttpService,
     private ozonImagesService: OzonImagesService,
+    private orderService: OrderService,
   ) {}
 
   @Cron(process.env.OZON_PING_STEP)
@@ -69,12 +71,12 @@ export class OzonService {
               },
               new Date(posting.analytics_data.delivery_date_begin),
               [],
-            ),
+            ) as Order,
         ),
       )
       .flat();
 
-    const oldOrders = await this.prisma.order.findMany();
+    const oldOrders = await this.prisma.order.findMany({ include: { category: true } });
 
     for (const newOrder of newOrders) {
       let isUnique: boolean = true;
@@ -99,12 +101,12 @@ export class OzonService {
 
   async updateDBData(uniqueOrders: Omit<Order, 'id'>[]) {
     if (uniqueOrders.length !== 0) {
-      const products = await this.prisma.order.createMany({
-        data: uniqueOrders.map((data) => ({
+      const products = await this.orderService.createOrders(
+        uniqueOrders.map((data) => ({
           ...data,
           proccess: OrderProcess.FREE,
         })),
-      });
+      );
       return products;
     }
     return [];

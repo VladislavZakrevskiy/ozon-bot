@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Action, Ctx, Update } from 'nestjs-telegraf';
 import { UserService } from 'src/user/user.service';
 import { SessionSceneContext } from 'src/bot/types/Scene';
@@ -9,8 +8,8 @@ import { ListManager } from '../../templates/ListManager';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
+import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 
-@Injectable()
 @Update()
 export class EmployeeProdfileService {
   constructor(
@@ -59,9 +58,7 @@ export class EmployeeProdfileService {
     const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
     const user = await this.userService.findUserById(user_id, true);
 
-    const photo_file_id = (await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1))
-      .photos[0][2].file_id;
-    const photo_url = await ctx.telegram.getFileLink(photo_file_id);
+    const photo_url = await getTelegramImage(ctx, ctx.chat.id);
 
     ctx.sendPhoto(
       { url: photo_url.toString() },

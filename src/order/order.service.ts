@@ -3,14 +3,16 @@ import { PrismaService } from 'src/prisma.service';
 import { FindOneByParameter } from './dto/FindOneByParameter';
 import { FindManyByParameter } from './dto/FindManyByParameter';
 import { CreateOrder } from './dto/CreateOrder';
-import { Order, Prisma } from '@prisma/client';
+import { Category, Order, Prisma } from '@prisma/client';
 import { UserService } from '../user/user.service';
+import { CategoryService } from './category.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private prisma: PrismaService,
     private userService: UserService,
+    private categoryService: CategoryService,
   ) {}
 
   async getOrdersOnReturns(name: string) {
@@ -23,12 +25,29 @@ export class OrderService {
 
   // CRUD
   async createOrder(data: CreateOrder) {
-    const order = await this.prisma.order.create({ data });
+    const category = await this.categoryService.findCategory(data.name);
+    const order = await this.prisma.order.create({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      data: { ...data, category: { connect: { id: category.id } } },
+      include: { category: true },
+    });
     return order;
   }
 
+  async createOrders(data: CreateOrder[]) {
+    const orders: Array<Order & { category: Category }> = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const order = (await this.createOrder(data[i])) as Order & { category: Category };
+      orders.push(order);
+    }
+
+    return orders;
+  }
+
   async deleteOrder(id: string) {
-    const order = await this.prisma.order.delete({ where: { id } });
+    const order = await this.prisma.order.delete({ where: { id }, include: { category: true } });
     return order;
   }
 
@@ -47,6 +66,7 @@ export class OrderService {
     const updatedOrder = await this.prisma.order.update({
       where: { id: toUpdateOrder.id },
       data: { ...data },
+      include: { category: true },
     });
     return updatedOrder;
   }
@@ -59,15 +79,15 @@ export class OrderService {
     const user = await this.userService.findUserById(user_id);
     delete user.id;
 
-    // Так надо - вопросы не задаем
     const updatedOrder = await this.updateOrder(order_id, {
       ...order,
       user: { connect: { id: user_id } },
+      category: { connect: { id: order.category_id } },
       proccess: 'DONE',
     });
     await this.userService.updateUser(user_id, {
       ...user,
-      money: Number(user.money) + updatedOrder.price,
+      money: Number(user.money) + updatedOrder.category.money,
     });
 
     return updatedOrder;
@@ -77,15 +97,30 @@ export class OrderService {
   async findOneByParameter({ id, user, product_id }: FindOneByParameter) {
     const order = await this.prisma.order.findUnique({
       where: { id, product_id },
-      include: { user },
+      include: { user, category: true },
     });
     return order;
   }
 
-  async findManyByParameter({ process, user_id, order_by_date, is_send }: FindManyByParameter) {
+  async findManyByParameter({
+    process,
+    user_id,
+    order_by_date,
+    is_send,
+    is_user_include,
+    date,
+    q,
+  }: FindManyByParameter) {
     const orders = await this.prisma.order.findMany({
-      where: { proccess: { in: process }, is_send, user: { id: user_id } },
+      where: {
+        proccess: { in: process },
+        is_send,
+        user: { id: user_id },
+        date: { ...date },
+        OR: [{ name: { contains: q } }, { category: { name: { contains: q } } }],
+      },
       orderBy: { date: order_by_date },
+      include: { category: true, user: is_user_include },
     });
     return orders;
   }
