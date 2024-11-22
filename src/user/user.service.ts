@@ -44,17 +44,29 @@ export class UserService {
     return { user, access_token, refresh_token };
   }
 
-  async registerUser(registerData: RegisterDto) {
-    const user = await this.prisma.user.create({
-      data: {
-        ...registerData,
-        employee_level: EmployeeLevel.ENEMY,
-        isApproved: false,
-        money: 0,
-        post: '',
-      },
-    });
-
+  async registerUser(registerData: RegisterDto, no_boos?: boolean) {
+    let user: User;
+    if (no_boos) {
+      user = await this.prisma.user.create({
+        data: {
+          ...registerData,
+          employee_level: EmployeeLevel.BOSS,
+          isApproved: true,
+          money: 0,
+          post: '',
+        },
+      });
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          ...registerData,
+          employee_level: EmployeeLevel.ENEMY,
+          isApproved: false,
+          money: 0,
+          post: '',
+        },
+      });
+    }
     const access_token = this.jwtService.generateAccessToken({ user });
     const refresh_token = this.jwtService.generateRefreshToken({ user });
 

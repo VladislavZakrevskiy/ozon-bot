@@ -66,46 +66,54 @@ export class RegisterScene {
 
       state.phone_number = phone_number;
 
-      const { user } = await this.userService.registerUser({
-        first_name: state.name.split(' ')?.[0] || 'Имя не указано',
-        last_name: state.name.split(' ')?.[1] || 'Фамилия не указана',
-        login: state.login,
-        password: hashSync(state.password, 7),
-        phone_number: state.phone_number || '',
-        tg_chat_id: ctx.message.chat.id,
-        tg_user_id: ctx.from.id,
-        tg_username: ctx.from.username,
-      });
-
-      await ctx.reply('Регистрация успешно завершена! Ожидайте одобрения админом!');
-
-      const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
-      const photo_url = await getTelegramImage(ctx, user.tg_user_id);
-
-      await ctx.telegram.sendPhoto(
-        Number(boss[0].tg_chat_id),
+      const boss_candidate = await this.userService.findUserByRole(EmployeeLevel.BOSS);
+      const { user } = await this.userService.registerUser(
         {
-          url: photo_url.toString(),
+          first_name: state.name.split(' ')?.[0] || 'Имя не указано',
+          last_name: state.name.split(' ')?.[1] || 'Фамилия не указана',
+          login: state.login,
+          password: hashSync(state.password, 7),
+          phone_number: state.phone_number || '',
+          tg_chat_id: ctx.message.chat.id,
+          tg_user_id: ctx.from.id,
+          tg_username: ctx.from.username,
         },
-        {
-          caption: `Подтвердите регистрацию! Выберите роль пользователя:
-Имя: ${user.first_name} ${user.last_name}
-Логин: ${user.login}
-Номер телефона: ${user.phone_number || 'Нет'}
-Телеграм ник: @${ctx.from.username || 'Нет'}
-Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name ? ctx.from.last_name : ''}`,
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: 'Админ', callback_data: 'admin' }],
-              [{ text: 'Начальник', callback_data: 'boss' }],
-              [{ text: 'Сотрудник', callback_data: 'employee' }],
-              [{ text: 'Не одобрять', callback_data: 'enemy' }],
-            ],
-          },
-        },
+        !!boss_candidate,
       );
 
-      await ctx.scene.leave();
+      if (!!boss_candidate) {
+        await ctx.reply('Регистрация успешно завершена! Здравствуйте, Босс!');
+      } else {
+        await ctx.reply('Регистрация успешно завершена! Ожидайте одобрения админом!');
+
+        const boss = await this.userService.findUserByRole(EmployeeLevel.BOSS);
+        const photo_url = await getTelegramImage(ctx, user.tg_user_id);
+
+        await ctx.telegram.sendPhoto(
+          Number(boss[0].tg_chat_id),
+          {
+            url: photo_url.toString(),
+          },
+          {
+            caption: `Подтвердите регистрацию! Выберите роль пользователя:
+  Имя: ${user.first_name} ${user.last_name}
+  Логин: ${user.login}
+  Номер телефона: ${user.phone_number || 'Нет'}
+  Телеграм ник: @${ctx.from.username || 'Нет'}
+  Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name ? ctx.from.last_name : ''}`,
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: 'Админ', callback_data: 'admin' }],
+                [{ text: 'Начальник', callback_data: 'boss' }],
+                [{ text: 'Сотрудник', callback_data: 'employee' }],
+                [{ text: 'Не одобрять', callback_data: 'enemy' }],
+              ],
+            },
+          },
+        );
+
+        await ctx.scene.leave();
+      }
     }
   }
 }

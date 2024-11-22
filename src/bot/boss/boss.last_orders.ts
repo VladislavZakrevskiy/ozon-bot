@@ -4,6 +4,7 @@ import { OrderService } from '../../order/order.service';
 import { EmployeeLevel } from '@prisma/client';
 import { Roles, RolesGuard } from 'src/core/decorators/Roles.guard';
 import { SessionSceneContext } from '../types/Scene';
+import { escapeMarkdown } from 'src/core/helpers/escapeMarkdown';
 
 @Update()
 export class BossLastOrdersService {
@@ -22,17 +23,19 @@ export class BossLastOrdersService {
     const orders = await this.orderService.findManyByParameter({ date: { gte: threeDaysAgo } });
 
     if (!orders.length) {
-      await ctx.reply(`За последние ${days} дней не было заказов.`);
+      await ctx.reply(`За последние ${days} дней не было заказов\.`);
       return;
     }
 
     await ctx.reply(
       `Заказы за последние ${days} дней:
 
-${orders.map(
-  ({ name, date }, i) => `${i + 1}. *${name}* ${new Date(date).toISOString().split('T')[0]}
-`,
-)}`,
+${orders
+  .slice(0, 100)
+  .map(({ name, date }, i) =>
+    escapeMarkdown(`${i + 1}. *${name}* ${new Date(date).toISOString().split('T')[0]}`),
+  )
+  .join('\n')}`,
       { parse_mode: 'MarkdownV2' },
     );
   }
