@@ -15,9 +15,9 @@ export class OrderService {
     private categoryService: CategoryService,
   ) {}
 
-  async getOrdersOnReturns(name: string) {
+  async getOrdersOnReturns(name: string, not_id: string) {
     const return_candidates = await this.prisma.order.findMany({
-      where: { name, proccess: 'RETURN' },
+      where: { AND: { name, proccess: 'RETURN' }, NOT: { id: not_id } },
     });
 
     return return_candidates;
@@ -51,7 +51,10 @@ export class OrderService {
     return order;
   }
 
-  async updateOrder(product_id: number | string, data: Prisma.OrderUpdateInput) {
+  async updateOrder(
+    product_id: number | string,
+    data: Prisma.OrderUpdateInput & { category_id?: string },
+  ) {
     let toUpdateOrder: Order;
 
     if (typeof product_id === 'number') {
@@ -63,9 +66,11 @@ export class OrderService {
         where: { id: product_id },
       });
     }
+    delete data.category_id;
+    const newData: Prisma.OrderUpdateInput = { ...data };
     const updatedOrder = await this.prisma.order.update({
       where: { id: toUpdateOrder.id },
-      data: { ...data },
+      data: { ...newData },
       include: { category: true },
     });
     return updatedOrder;

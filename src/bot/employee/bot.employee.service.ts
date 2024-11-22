@@ -29,7 +29,7 @@ export class BotEmployeeService {
     for (const employee of employees) {
       for (const newOrder of newOrders) {
         try {
-          const returns = await this.orderService.getOrdersOnReturns(newOrder.name);
+          const returns = await this.orderService.getOrdersOnReturns(newOrder.name, newOrder.id);
           const isAuth = await this.redis.get(getRedisKeys('user', employee.tg_chat_id));
           if (isAuth) {
             const { message_id } = await this.bot.telegram.sendPhoto(
@@ -58,6 +58,7 @@ export class BotEmployeeService {
             );
           }
         } catch (error) {
+          console.log(error);
           if (error?.error_code == 403) {
             const employee_index = employees.findIndex(({ id }) => id === employee.id);
             employees.splice(employee_index, 1);
@@ -128,13 +129,15 @@ export class BotEmployeeService {
     const current_order = await this.orderService.findOneByParameter({
       id: current_order_id,
     });
+    const current_category_id = current_order.category_id;
 
     delete current_order?.id;
     delete current_order?.user_id;
+    delete current_order.category_id;
     await this.orderService.updateOrder(current_order_id, {
       ...current_order,
       user: { connect: { id: current_user_id } },
-      category: { connect: { id: current_order.category_id } },
+      category: { connect: { id: current_category_id } },
       proccess: OrderProcess.DONE,
     });
 

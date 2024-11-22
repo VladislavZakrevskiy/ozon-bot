@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    ports:
+      - '3000:3000'
+    environment:
+      OZON_API: http://host.docker.internal:3002
+      DATABASE_URL: mongodb://mongo:27017/nestdb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - .:/app  
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /src/
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json  
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mongo_data:
+  redis_data:

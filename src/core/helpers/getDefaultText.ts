@@ -18,7 +18,10 @@ const roleTranslation: Record<EmployeeLevel, string> = {
 
 type MessageType = 'new' | 'char';
 
-const getNewOrder = (order: Order & { category: Category }, onReturns?: Order[]) => `#новыйзаказ
+const getNewOrder = (
+  order: Order & { category: Category },
+  onReturns?: Order[],
+) => `#новый${order.proccess === 'RETURN' ? 'возврат' : 'заказ'}
 Новый ${order.proccess === 'RETURN' ? 'возврат' : 'заказ'} номер \`\`\`${order.id}\`\`\`
 Наименование товара: *${order.name}*
 Категория: *${order.category.name}*
@@ -30,7 +33,7 @@ ${order.old_price ? `Старая цена: *${order.old_price} ${order.currency
 Экстренный: *${order.is_express ? 'Да' : 'Нет'}*
 SKU: *${order.sku}*
 
-${onReturns?.length !== 0 ? `На складе возвратов: *${onReturns?.length || 0}` : ''}*`;
+${onReturns?.length !== 0 ? `На складе возвратов: *${onReturns?.length || 0}*` : ''}`;
 
 const getCharOrder = (
   order: Order & { category: Category },

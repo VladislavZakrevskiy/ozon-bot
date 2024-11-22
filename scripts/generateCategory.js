@@ -1,5 +1,5 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const defaultCategories = [
   { name: 'Коврики предверные', signatures: ['Коврик домашний'], money: 100 },
@@ -55,30 +55,24 @@ const defaultCategories = [
   { name: 'Запчасти для электросамокатов', signatures: ['Коврик в самокат'], money: 118 },
 ];
 
-@Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  async onModuleInit() {
-    await this.$connect();
+const main = async () => {
+  const allCategories = await prisma.category.findMany();
+  const unique_categories = [];
 
-    const allCategories = await this.category.findMany();
-    const unique_categories = [];
-
-    for (const defaultCategory of defaultCategories) {
-      if (!allCategories.find(({ name }) => name === defaultCategory.name)) {
-        unique_categories.push(defaultCategories);
-      }
+  for (const defaultCategory of defaultCategories) {
+    if (!allCategories.find(({ name }) => name === defaultCategory.name)) {
+      unique_categories.push(defaultCategories);
     }
-
-    if (unique_categories.length === 0) return allCategories;
-
-    const categories = await this.category.createMany({
-      data: unique_categories,
-    });
-
-    return categories;
   }
 
-  async onModuleDestroy() {
-    await this.$disconnect();
-  }
-}
+  if (unique_categories.length === 0) return allCategories;
+
+  const categories = await prisma.category.createMany({
+    data: unique_categories,
+  });
+
+  console.log(categories);
+  return categories;
+};
+
+main();
