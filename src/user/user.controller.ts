@@ -1,4 +1,4 @@
-import { Get, Patch, Param, Body, Controller } from '@nestjs/common';
+import { Get, Patch, Param, Body, Controller, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from './dto/api/UpdateUserDTO';
 import { Token } from '../core/decorators/Token.decorator';
@@ -37,5 +37,10 @@ export class UserCotroller {
     } = this.jwtService.decodeAccessToken(token);
     const user = await this.userService.findUserById(id);
     return user;
+  }
+
+  @Delete('/:id')
+  async deleteUser(@Param('id') id: string) {
+    return await this.userService.deleteUser(id);
   }
 }

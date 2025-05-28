@@ -23,6 +23,7 @@ import { CategoryService } from 'src/order/category.service';
 import { AuthGuard } from 'src/core/decorators/Auth.guard';
 import { RolesGuard } from 'src/core/decorators/Roles.guard';
 import { ApproveScene } from './scenes/Admin.approve';
+import { CategorySelectionScene } from './boss/bot.choose_category.scene';
 
 @Module({
   providers: [
@@ -44,6 +45,7 @@ import { ApproveScene } from './scenes/Admin.approve';
     RegisterScene,
     LoginScene,
     ApproveScene,
+    CategorySelectionScene,
 
     // Guards
     AuthGuard,

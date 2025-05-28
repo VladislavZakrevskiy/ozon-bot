@@ -1,4 +1,4 @@
-import { EmployeeLevel, User } from '@prisma/client';
+import { Category, EmployeeLevel, User } from '@prisma/client';
 import { Context as ContextTelegraf, Scenes } from 'telegraf';
 import { SceneSessionData } from 'telegraf/typings/scenes';
 
@@ -14,6 +14,10 @@ export interface SessionContext extends ContextTelegraf {
     refresh_token?: string;
 
     approving_data: { userId: string; role: EmployeeLevel };
+
+    categories?: Category[];
+    selectedCategoryIds?: string[];
+    categoryMessageId?: number;
   };
 }
 

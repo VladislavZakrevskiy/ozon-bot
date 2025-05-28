@@ -12,7 +12,6 @@ export class UserService {
     private jwtService: JwtService,
   ) {}
 
-  // Auth operations
   async saveToken(id: string, token: string, type: 'register' | 'login' = 'login') {
     if (type == 'login') {
       const updatedToken = await this.prisma.refreshToken.update({
@@ -27,6 +26,15 @@ export class UserService {
 
       return createdToken;
     }
+  }
+
+  async updateUserCategories(userId: string, categoryIds: string[]): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        category_ids: categoryIds,
+      },
+    });
   }
 
   async createUser(registerData: Prisma.UserCreateInput) {
@@ -44,9 +52,9 @@ export class UserService {
     return { user, access_token, refresh_token };
   }
 
-  async registerUser(registerData: RegisterDto, no_boos?: boolean) {
+  async registerUser(registerData: RegisterDto, isBoos?: boolean) {
     let user: User;
-    if (no_boos) {
+    if (isBoos) {
       user = await this.prisma.user.create({
         data: {
           ...registerData,

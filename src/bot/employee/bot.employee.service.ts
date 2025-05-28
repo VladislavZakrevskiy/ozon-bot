@@ -31,7 +31,7 @@ export class BotEmployeeService {
         try {
           const returns = await this.orderService.getOrdersOnReturns(newOrder.name, newOrder.id);
           const isAuth = await this.redis.get(getRedisKeys('user', employee.tg_chat_id));
-          if (isAuth) {
+          if (isAuth && employee.category_ids.includes(newOrder.category_id)) {
             const { message_id } = await this.bot.telegram.sendPhoto(
               employee.tg_chat_id,
               { url: newOrder.image_urls[0] },

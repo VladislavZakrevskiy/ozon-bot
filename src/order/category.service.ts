@@ -28,6 +28,16 @@ export class CategoryService {
     return find_category || notfound_category;
   }
 
+  async getAllCategories(): Promise<Category[]> {
+    return this.prisma.category.findMany();
+  }
+
+  async getCategoryById(id: string): Promise<Category | null> {
+    return this.prisma.category.findUnique({
+      where: { id },
+    });
+  }
+
   async addAllCategories() {
     await this.prisma.category.deleteMany();
     const categories = await this.prisma.category.createMany({

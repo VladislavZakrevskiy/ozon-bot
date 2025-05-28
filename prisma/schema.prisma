@@ -8,23 +8,25 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  tg_chat_id     Int           @unique
-  tg_user_id     Int           @unique
-  tg_username String
-  login          String        @unique // почта
-  password       String
-  phone_number   String
-  first_name     String
-  last_name      String
-  post           String
-  employee_level EmployeeLevel
-  money          Int
-  count_date     DateTime?
-  count_money    Int?
-  isApproved     Boolean
-  orders         Order[]
-  RefreshToken   RefreshToken?
+  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
+  tg_chat_id         Int           @unique
+  tg_user_id         Int           @unique
+  tg_username        String
+  login              String        @unique // почта
+  password           String
+  phone_number       String
+  first_name         String
+  last_name          String
+  post               String
+  employee_level     EmployeeLevel
+  money              Int
+  count_date         DateTime?
+  count_money        Int?
+  isApproved         Boolean
+  orders             Order[]
+  RefreshToken       RefreshToken?
+  avaible_categories Category[]    @relation(fields: [category_ids], references: [id])
+  category_ids       String[]      @default([]) @db.ObjectId
 
   @@map("users")
 }
@@ -66,8 +68,10 @@ model Category {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   name       String
   signatures String[]
-  money Int
+  money      Int
   orders     Order[]
+  User       User[]   @relation(fields: [user_ids], references: [id])
+  user_ids   String[] @default([]) @db.ObjectId
 
   @@map("category")
 }

@@ -78,11 +78,12 @@ export class RegisterScene {
           tg_user_id: ctx.from.id,
           tg_username: ctx.from.username,
         },
-        !!boss_candidate,
+        !boss_candidate,
       );
 
-      if (!!boss_candidate) {
+      if (!boss_candidate) {
         await ctx.reply('Регистрация успешно завершена! Здравствуйте, Босс!');
+        await ctx.scene.leave();
       } else {
         await ctx.reply('Регистрация успешно завершена! Ожидайте одобрения админом!');
 
@@ -96,11 +97,11 @@ export class RegisterScene {
           },
           {
             caption: `Подтвердите регистрацию! Выберите роль пользователя:
-  Имя: ${user.first_name} ${user.last_name}
-  Логин: ${user.login}
-  Номер телефона: ${user.phone_number || 'Нет'}
-  Телеграм ник: @${ctx.from.username || 'Нет'}
-  Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name ? ctx.from.last_name : ''}`,
+Имя: ${user.first_name} ${user.last_name}
+Логин: ${user.login}
+Номер телефона: ${user.phone_number || 'Нет'}
+Телеграм ник: @${ctx.from.username || 'Нет'}
+Телеграм имя: ${ctx.from.first_name} ${ctx.from.last_name ? ctx.from.last_name : ''}`,
             reply_markup: {
               inline_keyboard: [
                 [{ text: 'Админ', callback_data: 'admin' }],
