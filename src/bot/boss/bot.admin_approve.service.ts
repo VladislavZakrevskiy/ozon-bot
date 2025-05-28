@@ -195,7 +195,6 @@ export class BotAdminApproveService {
   }
 
   extractEmail(ctx: Context): string {
-    console.log(ctx?.text?.split(' '));
     return ctx?.text?.split(' ')?.[7]?.split('\n')?.[0];
   }
 }

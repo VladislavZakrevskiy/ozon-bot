@@ -5,8 +5,8 @@ import { EmployeeLevel } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
-import { ListManager } from 'src/bot/templates/ListManager';
 import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
+import { ListManager } from 'src/bot/template/ListManager';
 
 @Update()
 export class AdminProfileService {

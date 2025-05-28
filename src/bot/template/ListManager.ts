@@ -37,6 +37,7 @@ export class ListManager<T> {
 
   public async getText() {
     const current_item = await this.currentItem();
+    console.log(current_item);
     return this.options.getText(current_item);
   }
 
@@ -130,6 +131,7 @@ export class ListManager<T> {
 
     try {
       if (image) {
+        console.log(image);
         await this.ctx.editMessageMedia(
           {
             type: 'photo',
@@ -147,6 +149,8 @@ export class ListManager<T> {
           reply_markup: inlineKeyboard,
         });
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

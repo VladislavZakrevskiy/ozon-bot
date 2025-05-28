@@ -4,7 +4,7 @@ import { SessionSceneContext } from 'src/bot/types/Scene';
 import { OrderProcess } from '@prisma/client';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
 import { OrderService } from 'src/order/order.service';
-import { ListManager } from '../../templates/ListManager';
+import { ListManager } from '../../template/ListManager';
 import { RedisService } from 'src/core/redis/redis.service';
 import { getRedisKeys } from 'src/core/redis/redisKeys';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
@@ -18,7 +18,6 @@ export class EmployeeProdfileService {
     private redis: RedisService,
   ) {}
 
-  // ListManager and some data
   async getListManager(
     ctx: SessionSceneContext,
     process: OrderProcess,

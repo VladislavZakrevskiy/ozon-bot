@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Workbook } from 'exceljs';
 import { OrderService } from './order.service';
 import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class ExcelService {
@@ -48,6 +49,7 @@ export class ExcelService {
     });
 
     const filePath = path.join(__dirname, '../../public/xlsx', `orders_${Date.now()}.xlsx`);
+    fs.writeFileSync(filePath, 'Hello World!');
     await workbook.xlsx.writeFile(filePath);
 
     return filePath;

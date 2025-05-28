@@ -1,5 +1,5 @@
 import { EmployeeLevel, OrderProcess } from '@prisma/client';
-import { ListManager } from 'src/bot/templates/ListManager';
+import { ListManager } from 'src/bot/template/ListManager';
 import { SessionSceneContext } from 'src/bot/types/Scene';
 import { getDefaultText } from 'src/core/helpers/getDefaultText';
 import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
@@ -37,7 +37,7 @@ export class BossParent {
           [{ text: 'Расчитать заработную плату', callback_data: 'admin_give_money' }],
         ],
         getText: (user) => getDefaultText(user, 'char'),
-        getImage: async (user) => (await getTelegramImage(ctx, user.tg_user_id)).toString(),
+        getImage: async (user) => (await getTelegramImage(ctx, user.tg_user_id)).href,
       },
       ctx,
       type,

@@ -10,7 +10,6 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = context.switchToHttp().getRequest<SessionContext>();
     const userId = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
-    console.log(userId);
 
     if (!userId) {
       await ctx.reply('Сначала вам нужно авторизоваться с помощью команды /login.');

@@ -71,7 +71,6 @@ const main = async () => {
     data: unique_categories,
   });
 
-  console.log(categories);
   return categories;
 };
 

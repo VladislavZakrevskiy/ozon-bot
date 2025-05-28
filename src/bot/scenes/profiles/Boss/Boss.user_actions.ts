@@ -19,7 +19,6 @@ export class BossUserActions extends BossParent {
     super(userService, orderService, redis);
   }
 
-  // UserList
   @Action(/^next__currentIndex_boss_(ADMIN|EMPLOYEE|BOSS)$/)
   public async handleUserNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
@@ -27,6 +26,7 @@ export class BossUserActions extends BossParent {
     )?.[4] as EmployeeLevel;
     const { currentIndex, listManager, users } = await this.getUsersListManager(ctx, prefix);
 
+    console.log(this.redis.get(getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id)));
     if (currentIndex < users.length - 1) {
       await this.redis.set(
         getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id),
@@ -44,6 +44,9 @@ export class BossUserActions extends BossParent {
       '_',
     )?.[4] as EmployeeLevel;
     const { currentIndex, listManager } = await this.getUsersListManager(ctx, prefix);
+    console.log(
+      await this.redis.get(getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id)),
+    );
     if (currentIndex > 0) {
       await this.redis.set(
         getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id),
@@ -51,6 +54,8 @@ export class BossUserActions extends BossParent {
       );
       await listManager.editMessage();
     } else {
+      await this.redis.set(getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id), 0);
+      await listManager.editMessage();
       await ctx.answerCbQuery('Нет предыдущего элемента');
     }
   }

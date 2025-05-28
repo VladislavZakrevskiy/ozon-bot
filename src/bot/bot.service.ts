@@ -9,7 +9,6 @@ export class BotService {
 
   @Start()
   async startCommand(@Ctx() ctx: SessionContext) {
-    console.log(ctx.from.first_name, ctx.from.id, ctx.chat.id);
     await ctx.reply(
       'Добро пожаловать! Используйте /login для авторизации, /register для регистрации',
     );

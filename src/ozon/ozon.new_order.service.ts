@@ -102,10 +102,12 @@ export class OzonService {
   async updateDBData(uniqueOrders: Omit<Order, 'id'>[]) {
     if (uniqueOrders.length !== 0) {
       const products = await this.orderService.createOrders(
-        uniqueOrders.map((data) => ({
-          ...data,
-          proccess: OrderProcess.FREE,
-        })),
+        uniqueOrders.map((data) => {
+          return {
+            ...data,
+            proccess: OrderProcess.FREE,
+          };
+        }),
       );
       return products;
     }

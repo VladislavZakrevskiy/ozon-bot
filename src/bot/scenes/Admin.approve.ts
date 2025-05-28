@@ -16,7 +16,6 @@ export class ApproveScene {
   @On('text')
   async onText(@Ctx() ctx: SessionSceneContext) {
     const state = ctx.session.approving_data;
-    console.log(state);
 
     if (state && state.userId && state.role) {
       const user = await this.userService.findUserById(state.userId);
