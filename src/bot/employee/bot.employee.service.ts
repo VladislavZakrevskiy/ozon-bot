@@ -126,20 +126,7 @@ export class BotEmployeeService {
     const current_order_id = ctx.text.split(' ')[3].split('\n')[0];
     const current_user_id = await this.redis.get(getRedisKeys('user_id', current_chat_id));
 
-    const current_order = await this.orderService.findOneByParameter({
-      id: current_order_id,
-    });
-    const current_category_id = current_order.category_id;
-
-    delete current_order?.id;
-    delete current_order?.user_id;
-    delete current_order.category_id;
-    await this.orderService.updateOrder(current_order_id, {
-      ...current_order,
-      user: { connect: { id: current_user_id } },
-      category: { connect: { id: current_category_id } },
-      proccess: OrderProcess.DONE,
-    });
+    const endedOrder = await this.orderService.endOrder(current_order_id, current_user_id);
 
     for (const employee of employees) {
       const emp_chat_id = employee.tg_chat_id;
@@ -154,6 +141,6 @@ export class BotEmployeeService {
       await this.redis.delete(getRedisKeys('orderToDelete', current_order_id, emp_chat_id));
     }
 
-    ctx.reply('Вы взяли со склада данный товар! ');
+    ctx.reply(`Вы взяли со склада данный товар и заработали ${endedOrder.price}!`);
   }
 }

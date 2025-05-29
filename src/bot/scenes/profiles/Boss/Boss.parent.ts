@@ -19,7 +19,6 @@ export class BossParent {
     const redisIndex = await this.redis.get(getRedisKeys('currentIndex_boss', type, ctx.chat.id));
     const users = await this.userService.findUserByRole(type);
 
-    // Проверяем, что индекс валидный
     let currentIndex = redisIndex ? Number(redisIndex) : 0;
     if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= users.length) {
       currentIndex = 0;

@@ -8,7 +8,7 @@ interface ListManagerOptions<T> {
   getImage?: (data: T) => Promise<string>;
   extraButtons?: {
     text: string;
-    callback_data: string;
+    callback_data?: string;
     web_app?: (data: T) => { url: string };
   }[][];
 }
@@ -30,7 +30,6 @@ export class ListManager<T> {
     const redisIndex = await this.redis.get(getRedisKeys(this.key, this.prefix, this.ctx.chat.id));
     const currentIndex = redisIndex ? Number(redisIndex) : 0;
 
-    // Проверяем, что индекс валидный
     if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= this.list.length) {
       this.current_index = 0;
       await this.redis.set(getRedisKeys(this.key, this.prefix, this.ctx.chat.id), 0);

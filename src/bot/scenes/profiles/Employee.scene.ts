@@ -35,7 +35,6 @@ export class EmployeeProdfileService {
       user_id: user_id,
     });
 
-    // Проверяем, что индекс валидный
     let currentIndex = redisIndex ? Number(redisIndex) : 0;
     if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= orders.length) {
       currentIndex = 0;
@@ -50,7 +49,6 @@ export class EmployeeProdfileService {
           : undefined,
         getText: (order) => getDefaultText(order, 'char'),
         getImage: async (order) => {
-          // Проверяем, что URL существует и преобразуем его в строку
           return order.image_urls && order.image_urls.length > 0
             ? String(order.image_urls[0])
             : 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
@@ -64,7 +62,6 @@ export class EmployeeProdfileService {
     return { listManager, currentIndex, orders };
   }
 
-  // Profile
   async handleProfile(ctx: SessionSceneContext) {
     const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
     const user = await this.userService.findUserById(user_id, true);
@@ -86,7 +83,6 @@ export class EmployeeProdfileService {
     );
   }
 
-  // List
   @Action(/^next__currentIndex_employee_.*/)
   public async handleNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split('_')?.[3];
@@ -151,7 +147,6 @@ export class EmployeeProdfileService {
     listManager.sendInitialMessage();
   }
 
-  // List Actions
   @Action('end_order')
   async endOrder(@Ctx() ctx: SessionSceneContext) {
     const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));

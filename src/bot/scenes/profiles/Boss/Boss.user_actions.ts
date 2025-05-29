@@ -53,7 +53,6 @@ export class BossUserActions extends BossParent {
       );
       await listManager.editMessage();
     } else {
-      // Если currentIndex уже 0, просто показываем сообщение без обновления
       await ctx.answerCbQuery('Нет предыдущего элемента');
     }
   }
@@ -94,19 +93,16 @@ export class BossUserActions extends BossParent {
     listManager.sendInitialMessage();
   }
 
-  // Employee Actions
   @Action('admin_dismiss_employee')
   async dismissEmployee(@Ctx() ctx: SessionSceneContext) {
     const { users, currentIndex } = await this.getUsersListManager(ctx);
     const currentUser = users[currentIndex];
 
-    // Проверяем, есть ли у сотрудника незавершенные заказы
     const userOrders = await this.orderService.findManyByParameter({
       process: ['IN_WORK'],
       user_id: currentUser.id,
     });
 
-    // Если есть незавершенные заказы, переводим их в статус FREE
     if (userOrders && userOrders.length > 0) {
       for (const order of userOrders) {
         delete order.id;
@@ -114,10 +110,10 @@ export class BossUserActions extends BossParent {
 
         await this.orderService.updateOrder(order.product_id, {
           ...order,
-          user: {}, // Отвязываем пользователя
+          user: {},
           category: { connect: { id: order.category_id } },
           proccess: 'FREE',
-          is_send: false, // Чтобы заказ снова отправился сотрудникам
+          is_send: false,
         });
       }
 
@@ -126,10 +122,8 @@ export class BossUserActions extends BossParent {
       );
     }
 
-    // Выполняем расчет денег перед увольнением
     await this.userService.countMoney(currentUser.id);
 
-    // Удаляем пользователя
     this.userService.deleteUser(currentUser.id);
 
     await ctx.telegram.sendMessage(
@@ -138,7 +132,7 @@ export class BossUserActions extends BossParent {
     );
 
     await ctx.replyWithMarkdownV2(`Уволен данный сотрудник:
- ${getDefaultText(currentUser, 'char')}`);
+${getDefaultText(currentUser, 'char')}`);
   }
 
   @Action('admin_give_money')
@@ -152,6 +146,6 @@ export class BossUserActions extends BossParent {
       'Расчет выплат произведен, в ближайшие дни ожидайте зп',
     );
     await ctx.replyWithMarkdownV2(`Вы сделали перерасчет зп данному сотруднику:
- ${getDefaultText(updatedUser, 'char')}`);
+${getDefaultText(updatedUser, 'char')}`);
   }
 }

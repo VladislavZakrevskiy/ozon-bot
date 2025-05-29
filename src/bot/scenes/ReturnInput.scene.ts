@@ -46,7 +46,6 @@ export class ReturnInputScene {
         return;
       }
 
-      // Находим категорию по названию товара
       const category = await this.categoryService.findCategory(name);
 
       if (!category) {

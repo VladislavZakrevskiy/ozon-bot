@@ -38,6 +38,12 @@ export class BossProfileService extends BossParent {
               { callback_data: 'boss_work_orders', text: 'Все в работе' },
               { callback_data: 'boss_return_orders', text: 'Все возвраты' },
             ],
+            [
+              {
+                text: 'Все возвраты',
+                web_app: { url: `${process.env.WEBAPP_URL}/add-return` },
+              },
+            ],
           ],
         },
       },

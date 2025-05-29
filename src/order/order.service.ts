@@ -23,7 +23,6 @@ export class OrderService {
     return return_candidates;
   }
 
-  // CRUD
   async createOrder(data: CreateOrder) {
     const category = await this.categoryService.findCategory(data.name);
     const order = await this.prisma.order.create({
@@ -91,7 +90,6 @@ export class OrderService {
       proccess: 'DONE',
     });
 
-    // Используем цену заказа вместо стандартной цены категории
     const orderPrice = updatedOrder.price || updatedOrder.category.money;
 
     await this.userService.updateUser(user_id, {
@@ -102,7 +100,6 @@ export class OrderService {
     return updatedOrder;
   }
 
-  // Find
   async findOneByParameter({ id, user, product_id }: FindOneByParameter) {
     const order = await this.prisma.order.findUnique({
       where: { id, product_id },
@@ -120,12 +117,10 @@ export class OrderService {
     date,
     q,
   }: FindManyByParameter) {
-    // Создаем базовый запрос
     const whereClause: any = {
       proccess: { in: process },
     };
 
-    // Добавляем условия только если они определены
     if (is_send !== undefined) {
       whereClause.is_send = is_send;
     }

@@ -164,10 +164,8 @@ export class AdminProfileService {
 
   @Action('admin_add_return')
   async addReturn(@Ctx() ctx: SessionSceneContext) {
-    // Сохраняем в Redis, что мы находимся в процессе добавления возврата
     await this.redis.set(getRedisKeys('adding_return', ctx.chat.id), 'true');
 
-    // Запрашиваем информацию о возврате
     await ctx.reply(
       'Введите информацию о возврате в следующем формате:\n\n' +
         'Название товара\n' +
@@ -183,7 +181,6 @@ export class AdminProfileService {
         'https://example.com/image.jpg',
     );
 
-    // Переходим в сцену ожидания ввода информации о возврате
     await ctx.scene.enter('RETURN_INPUT');
   }
 }
