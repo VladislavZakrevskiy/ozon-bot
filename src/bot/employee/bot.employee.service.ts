@@ -122,11 +122,7 @@ export class BotEmployeeService {
   async takeFromWarehouse(@Ctx() ctx: SessionContext) {
     const employees = await this.userService.findUserByRole(EmployeeLevel.EMPLOYEE);
 
-    const current_chat_id = ctx.chat.id;
     const current_order_id = ctx.text.split(' ')[3].split('\n')[0];
-    const current_user_id = await this.redis.get(getRedisKeys('user_id', current_chat_id));
-
-    const endedOrder = await this.orderService.endOrder(current_order_id, current_user_id);
 
     for (const employee of employees) {
       const emp_chat_id = employee.tg_chat_id;
@@ -141,6 +137,6 @@ export class BotEmployeeService {
       await this.redis.delete(getRedisKeys('orderToDelete', current_order_id, emp_chat_id));
     }
 
-    ctx.reply(`Вы взяли со склада данный товар и заработали ${endedOrder.price}!`);
+    ctx.reply(`Вы взяли со склада данный товар`);
   }
 }

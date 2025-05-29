@@ -63,7 +63,7 @@ Email: ${user.login}
 
 ${user.money ? `Заработанные деньги: ${user.money}` : ''}
 ${user.count_date ? `Последний перерасчет: ${user.count_date}` : ''}
-${user.count_money ? `Сумма последнего перерасчета: ${user.count_date}` : ''}
+${user.count_money ? `Сумма последнего перерасчета: ${user.count_money}` : ''}
 `;
 
 const getCharUser = (user: User) => `Имя: ${user.first_name}

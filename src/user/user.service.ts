@@ -131,13 +131,10 @@ export class UserService {
     const user = await this.findUserById(user_id);
     delete user.id;
 
-    // Сохраняем текущую сумму в count_money, но не обнуляем money
-    // Это позволит сотруднику продолжать накапливать деньги
     const updatedUser = await this.updateUser(user_id, {
       ...user,
       count_date: new Date(),
       count_money: user.money,
-      // Не обнуляем money: money: user.money остается прежним
     });
 
     return updatedUser;
