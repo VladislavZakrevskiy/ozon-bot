@@ -27,11 +27,17 @@ export class ListManager<T> {
   ) {}
 
   public async currentItem() {
-    const currentIndex = Number(
-      await this.redis.get(getRedisKeys(this.key, this.prefix, this.ctx.chat.id)),
-    );
-    this.current_index = currentIndex;
+    const redisIndex = await this.redis.get(getRedisKeys(this.key, this.prefix, this.ctx.chat.id));
+    const currentIndex = redisIndex ? Number(redisIndex) : 0;
 
+    // Проверяем, что индекс валидный
+    if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= this.list.length) {
+      this.current_index = 0;
+      await this.redis.set(getRedisKeys(this.key, this.prefix, this.ctx.chat.id), 0);
+      return this.list[0];
+    }
+
+    this.current_index = currentIndex;
     return this.list[currentIndex];
   }
 
@@ -43,8 +49,12 @@ export class ListManager<T> {
 
   public async getImage() {
     const current_item = await this.currentItem();
-    const image = await this.options.getImage(current_item);
 
+    if (!this.options.getImage) {
+      return 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
+    }
+
+    const image = await this.options.getImage(current_item);
     return image || 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
   }
   private async getButtons() {

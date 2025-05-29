@@ -90,9 +90,13 @@ export class OrderService {
       category: { connect: { id: order.category_id } },
       proccess: 'DONE',
     });
+
+    // Используем цену заказа вместо стандартной цены категории
+    const orderPrice = updatedOrder.price || updatedOrder.category.money;
+
     await this.userService.updateUser(user_id, {
       ...user,
-      money: Number(user.money) + updatedOrder.category.money,
+      money: Number(user.money) + Number(orderPrice),
     });
 
     return updatedOrder;
@@ -116,14 +120,30 @@ export class OrderService {
     date,
     q,
   }: FindManyByParameter) {
+    // Создаем базовый запрос
+    const whereClause: any = {
+      proccess: { in: process },
+    };
+
+    // Добавляем условия только если они определены
+    if (is_send !== undefined) {
+      whereClause.is_send = is_send;
+    }
+
+    if (user_id) {
+      whereClause.user = { id: user_id };
+    }
+
+    if (date) {
+      whereClause.date = { ...date };
+    }
+
+    if (q) {
+      whereClause.OR = [{ name: { contains: q } }, { category: { name: { contains: q } } }];
+    }
+
     const orders = await this.prisma.order.findMany({
-      where: {
-        proccess: { in: process },
-        is_send,
-        user: { id: user_id },
-        date: { ...date },
-        OR: [{ name: { contains: q } }, { category: { name: { contains: q } } }],
-      },
+      where: whereClause,
       orderBy: { date: order_by_date },
       include: { category: true, user: is_user_include },
     });

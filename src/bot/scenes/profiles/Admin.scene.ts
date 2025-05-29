@@ -143,9 +143,35 @@ export class AdminProfileService {
             [{ callback_data: 'admin_done_orders', text: 'Все выполненные' }],
             [{ callback_data: 'admin_work_orders', text: 'Все в работе' }],
             [{ callback_data: 'admin_return_orders', text: 'Все возвраты' }],
+            [{ callback_data: 'admin_add_return', text: 'Добавить возврат' }],
           ],
         },
       },
     );
+  }
+
+  @Action('admin_add_return')
+  async addReturn(@Ctx() ctx: SessionSceneContext) {
+    // Сохраняем в Redis, что мы находимся в процессе добавления возврата
+    await this.redis.set(getRedisKeys('adding_return', ctx.chat.id), 'true');
+
+    // Запрашиваем информацию о возврате
+    await ctx.reply(
+      'Введите информацию о возврате в следующем формате:\n\n' +
+        'Название товара\n' +
+        'Артикул (SKU)\n' +
+        'ID товара\n' +
+        'Цена\n' +
+        'URL изображения\n\n' +
+        'Например:\n' +
+        'Смартфон Xiaomi\n' +
+        'XM-123456\n' +
+        '123456789\n' +
+        '15000\n' +
+        'https://example.com/image.jpg',
+    );
+
+    // Переходим в сцену ожидания ввода информации о возврате
+    await ctx.scene.enter('RETURN_INPUT');
   }
 }

@@ -24,6 +24,7 @@ import { AuthGuard } from 'src/core/decorators/Auth.guard';
 import { RolesGuard } from 'src/core/decorators/Roles.guard';
 import { ApproveScene } from './scenes/Admin.approve';
 import { CategorySelectionScene } from './boss/bot.choose_category.scene';
+import { ReturnInputScene } from './scenes/ReturnInput.scene';
 
 @Module({
   providers: [
@@ -46,6 +47,7 @@ import { CategorySelectionScene } from './boss/bot.choose_category.scene';
     LoginScene,
     ApproveScene,
     CategorySelectionScene,
+    ReturnInputScene,
 
     // Guards
     AuthGuard,

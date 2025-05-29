@@ -102,11 +102,43 @@ export class BossUserActions extends BossParent {
     const { users, currentIndex } = await this.getUsersListManager(ctx);
     const currentUser = users[currentIndex];
 
+    // Проверяем, есть ли у сотрудника незавершенные заказы
+    const userOrders = await this.orderService.findManyByParameter({
+      process: ['IN_WORK'],
+      user_id: currentUser.id,
+    });
+
+    // Если есть незавершенные заказы, переводим их в статус FREE
+    if (userOrders && userOrders.length > 0) {
+      for (const order of userOrders) {
+        delete order.id;
+        delete order.user_id;
+
+        await this.orderService.updateOrder(order.product_id, {
+          ...order,
+          user: {}, // Отвязываем пользователя
+          category: { connect: { id: order.category_id } },
+          proccess: 'FREE',
+          is_send: false, // Чтобы заказ снова отправился сотрудникам
+        });
+      }
+
+      await ctx.reply(
+        `Освобождено ${userOrders.length} заказов, которые были в работе у сотрудника`,
+      );
+    }
+
+    // Выполняем расчет денег перед увольнением
+    await this.userService.countMoney(currentUser.id);
+
+    // Удаляем пользователя
     this.userService.deleteUser(currentUser.id);
+
     await ctx.telegram.sendMessage(
       currentUser.tg_chat_id,
-      'К сожалению, вы уволены, расчет будет произведен',
+      'К сожалению, вы уволены, расчет произведен',
     );
+
     await ctx.replyWithMarkdownV2(`Уволен данный сотрудник:
  ${getDefaultText(currentUser, 'char')}`);
   }

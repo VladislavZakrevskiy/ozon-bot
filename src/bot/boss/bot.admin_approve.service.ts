@@ -159,13 +159,20 @@ export class BotAdminApproveService {
 
   @Action('confirm_categories')
   async confirmCategorySelection(@Ctx() ctx: SessionSceneContext) {
-    await this.userService.updateUserCategories(
-      ctx.session.approving_data.userId,
-      ctx.session.selectedCategoryIds || [],
-    );
+    const userId = ctx.session.approving_data.userId;
+    const role = ctx.session.approving_data.role;
+
+    // Обновляем категории пользователя
+    await this.userService.updateUserCategories(userId, ctx.session.selectedCategoryIds || []);
+
+    // Обновляем статус пользователя на одобренный и устанавливаем роль
+    await this.userService.updateUser(userId, {
+      isApproved: true,
+      employee_level: role,
+    });
 
     await ctx.answerCbQuery('Категории успешно сохранены!');
-    await ctx.reply('Выбранные категории успешно сохранены.');
+    await ctx.reply(`Выбранные категории успешно сохранены. Пользователь одобрен с ролью ${role}.`);
 
     await ctx.scene.enter(Scenes.APPROVE);
   }
