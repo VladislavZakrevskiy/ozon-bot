@@ -7,17 +7,19 @@ import { getRedisKeys } from 'src/core/redis/redisKeys';
 import { ListManager } from 'src/bot/template/ListManager';
 import { OrderService } from 'src/order/order.service';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
+import { UserService } from 'src/user/user.service';
 
 @Update()
 export class AdminProfileService {
   constructor(
     private readonly orderService: OrderService,
+    private readonly userService: UserService,
     private redis: RedisService,
   ) {}
 
   async getOrdersListManager(ctx: SessionSceneContext, process_type: OrderProcess = 'DONE') {
     const currentIndex = Number(
-      await this.redis.get(getRedisKeys('currentIndex_bossorders', process_type, ctx.chat.id)),
+      await this.redis.get(getRedisKeys('currentIndex_adminOrders', process_type, ctx.chat.id)),
     );
     const orders = await this.orderService.findManyByParameter({ process: [process_type] });
     const listManager = new ListManager(
@@ -45,13 +47,13 @@ export class AdminProfileService {
       },
       ctx,
       process_type,
-      'currentIndex_bossorders',
+      'currentIndex_adminOrders',
     );
 
     return { listManager, currentIndex, orders };
   }
   // OrderList
-  @Action(/^next__currentIndex_bossorders_(DONE|IN_WORK|RETURN)$/)
+  @Action(/^next__currentIndex_adminOrders_(DONE|IN_WORK|RETURN)$/)
   public async handleOrderNext(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
@@ -60,7 +62,7 @@ export class AdminProfileService {
 
     if (currentIndex < orders.length - 1) {
       await this.redis.set(
-        getRedisKeys('currentIndex_bossorders', listManager.prefix, ctx.chat.id),
+        getRedisKeys('currentIndex_adminOrders', listManager.prefix, ctx.chat.id),
         currentIndex + 1,
       );
       await listManager.editMessage();
@@ -69,7 +71,7 @@ export class AdminProfileService {
     }
   }
 
-  @Action(/^prev__currentIndex_bossorders_(DONE|IN_WORK|RETURN)$/)
+  @Action(/^prev__currentIndex_adminOrders_(DONE|IN_WORK|RETURN)$/)
   public async handleOrderPrev(@Ctx() ctx: SessionSceneContext): Promise<void> {
     const prefix = (ctx.callbackQuery as CallbackQuery.DataQuery).data.split(
       '_',
@@ -78,7 +80,7 @@ export class AdminProfileService {
 
     if (currentIndex > 0) {
       await this.redis.set(
-        getRedisKeys('currentIndex_bossorders', listManager.prefix, ctx.chat.id),
+        getRedisKeys('currentIndex_adminOrders', listManager.prefix, ctx.chat.id),
         currentIndex - 1,
       );
       await listManager.editMessage();
@@ -87,7 +89,7 @@ export class AdminProfileService {
     }
   }
 
-  @Action('boss_done_orders')
+  @Action('admin_done_orders')
   async doneOrders(@Ctx() ctx: SessionSceneContext) {
     const { listManager, orders } = await this.getOrdersListManager(ctx, OrderProcess.DONE);
 
@@ -99,7 +101,7 @@ export class AdminProfileService {
     listManager.sendInitialMessage();
   }
 
-  @Action('boss_work_orders')
+  @Action('admin_work_orders')
   async workOrders(@Ctx() ctx: SessionSceneContext) {
     const { listManager, orders } = await this.getOrdersListManager(ctx, OrderProcess.IN_WORK);
 
@@ -111,7 +113,7 @@ export class AdminProfileService {
     listManager.sendInitialMessage();
   }
 
-  @Action('boss_return_orders')
+  @Action('admin_return_orders')
   async returnOrders(@Ctx() ctx: SessionSceneContext) {
     const { listManager, orders } = await this.getOrdersListManager(ctx, OrderProcess.RETURN);
 
@@ -121,5 +123,29 @@ export class AdminProfileService {
     }
 
     listManager.sendInitialMessage();
+  }
+
+  async handleProfile(ctx: SessionSceneContext) {
+    const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
+    const user = await this.userService.findUserById(user_id, true);
+
+    const photo_file_id = (await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1))
+      .photos[0][2].file_id;
+    const photo_url = await ctx.telegram.getFileLink(photo_file_id);
+
+    ctx.sendPhoto(
+      { url: photo_url.toString() },
+      {
+        caption: getDefaultText(user, 'new'),
+        parse_mode: 'MarkdownV2',
+        reply_markup: {
+          inline_keyboard: [
+            [{ callback_data: 'admin_done_orders', text: 'Все выполненные' }],
+            [{ callback_data: 'admin_work_orders', text: 'Все в работе' }],
+            [{ callback_data: 'admin_return_orders', text: 'Все возвраты' }],
+          ],
+        },
+      },
+    );
   }
 }
