@@ -112,7 +112,10 @@ export class UserService {
   async updateUser(id: string, data: Partial<Omit<User, 'id'>>): Promise<User> {
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        category_ids: { set: data.category_ids },
+      },
     });
   }
 

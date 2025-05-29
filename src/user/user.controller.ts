@@ -13,11 +13,8 @@ export class UserCotroller {
 
   @Patch('/:id')
   async updateUser(@Body() updateOrderDto: UpdateUserDTO, @Param('id') id: string) {
-    const user = await this.userService.findUserById(id);
-    delete user.id;
     updateOrderDto.money = Number(updateOrderDto.money);
     const updatedUser = await this.userService.updateUser(id, {
-      ...user,
       ...updateOrderDto,
     });
 
