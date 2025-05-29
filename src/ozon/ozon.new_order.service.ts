@@ -21,10 +21,9 @@ export class OzonService {
   async pingOzon() {
     try {
       const orders = await this.getOrders();
-      console.log(orders);
       const uniqueOrders = await this.getUniqueOrders(orders.data);
-      console.log(uniqueOrders);
-      await this.updateDBData(uniqueOrders);
+      const products = await this.updateDBData(uniqueOrders);
+      console.log(products);
     } catch (e) {
       console.error(e);
     }
