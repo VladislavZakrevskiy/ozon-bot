@@ -16,7 +16,8 @@ export class CategoryService {
     for (const category of categories) {
       let is_find = false;
       for (const signature of category.signatures) {
-        if (productName.includes(signature)) {
+        const cleanName = productName.split(' v')[0];
+        if (cleanName.includes(signature)) {
           is_find = true;
           find_category = category;
           break;
