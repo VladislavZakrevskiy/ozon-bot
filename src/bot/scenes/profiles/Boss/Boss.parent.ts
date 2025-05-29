@@ -16,10 +16,15 @@ export class BossParent {
   ) {}
 
   async getUsersListManager(ctx: SessionSceneContext, type: EmployeeLevel = 'EMPLOYEE') {
-    const currentIndex = Number(
-      await this.redis.get(getRedisKeys('currentIndex_boss', type, ctx.chat.id)),
-    );
+    const redisIndex = await this.redis.get(getRedisKeys('currentIndex_boss', type, ctx.chat.id));
     const users = await this.userService.findUserByRole(type);
+
+    // Проверяем, что индекс валидный
+    let currentIndex = redisIndex ? Number(redisIndex) : 0;
+    if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= users.length) {
+      currentIndex = 0;
+      await this.redis.set(getRedisKeys('currentIndex_boss', type, ctx.chat.id), 0);
+    }
     const listManager = new ListManager(
       this.redis,
       users,
@@ -48,10 +53,17 @@ export class BossParent {
   }
 
   async getOrdersListManager(ctx: SessionSceneContext, process_type: OrderProcess = 'DONE') {
-    const currentIndex = Number(
-      await this.redis.get(getRedisKeys('currentIndex_boss', process_type, ctx.chat.id)),
+    const redisIndex = await this.redis.get(
+      getRedisKeys('currentIndex_boss', process_type, ctx.chat.id),
     );
     const orders = await this.orderService.findManyByParameter({ process: [process_type] });
+
+    // Проверяем, что индекс валидный
+    let currentIndex = redisIndex ? Number(redisIndex) : 0;
+    if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= orders.length) {
+      currentIndex = 0;
+      await this.redis.set(getRedisKeys('currentIndex_boss', process_type, ctx.chat.id), 0);
+    }
     const listManager = new ListManager(
       this.redis,
       orders,

@@ -26,7 +26,6 @@ export class BossUserActions extends BossParent {
     )?.[4] as EmployeeLevel;
     const { currentIndex, listManager, users } = await this.getUsersListManager(ctx, prefix);
 
-    console.log(this.redis.get(getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id)));
     if (currentIndex < users.length - 1) {
       await this.redis.set(
         getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id),
@@ -34,7 +33,7 @@ export class BossUserActions extends BossParent {
       );
       await listManager.editMessage();
     } else {
-      await ctx.answerCbQuery('Нет следующего элемента 1');
+      await ctx.answerCbQuery('Нет следующего элемента');
     }
   }
 
@@ -54,8 +53,7 @@ export class BossUserActions extends BossParent {
       );
       await listManager.editMessage();
     } else {
-      await this.redis.set(getRedisKeys('currentIndex_boss', listManager.prefix, ctx.chat.id), 0);
-      await listManager.editMessage();
+      // Если currentIndex уже 0, просто показываем сообщение без обновления
       await ctx.answerCbQuery('Нет предыдущего элемента');
     }
   }

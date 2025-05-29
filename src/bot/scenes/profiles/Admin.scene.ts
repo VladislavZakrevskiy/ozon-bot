@@ -8,6 +8,7 @@ import { ListManager } from 'src/bot/template/ListManager';
 import { OrderService } from 'src/order/order.service';
 import { CallbackQuery } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
+import { getTelegramImage } from 'src/core/helpers/getTelegramImage';
 
 @Update()
 export class AdminProfileService {
@@ -18,10 +19,17 @@ export class AdminProfileService {
   ) {}
 
   async getOrdersListManager(ctx: SessionSceneContext, process_type: OrderProcess = 'DONE') {
-    const currentIndex = Number(
-      await this.redis.get(getRedisKeys('currentIndex_adminOrders', process_type, ctx.chat.id)),
+    const redisIndex = await this.redis.get(
+      getRedisKeys('currentIndex_adminOrders', process_type, ctx.chat.id),
     );
     const orders = await this.orderService.findManyByParameter({ process: [process_type] });
+
+    // Проверяем, что индекс валидный
+    let currentIndex = redisIndex ? Number(redisIndex) : 0;
+    if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= orders.length) {
+      currentIndex = 0;
+      await this.redis.set(getRedisKeys('currentIndex_adminOrders', process_type, ctx.chat.id), 0);
+    }
     const listManager = new ListManager(
       this.redis,
       orders,
@@ -129,9 +137,8 @@ export class AdminProfileService {
     const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
     const user = await this.userService.findUserById(user_id, true);
 
-    const photo_file_id = (await ctx.telegram.getUserProfilePhotos(user.tg_user_id, 0, 1))
-      .photos[0][2].file_id;
-    const photo_url = await ctx.telegram.getFileLink(photo_file_id);
+    // Используем getTelegramImage для безопасного получения URL фотографии
+    const photo_url = await getTelegramImage(ctx, user.tg_user_id);
 
     ctx.sendPhoto(
       { url: photo_url.toString() },

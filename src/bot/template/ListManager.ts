@@ -142,10 +142,13 @@ export class ListManager<T> {
     try {
       if (image) {
         console.log(image);
+        // Преобразуем image в строку, независимо от его типа
+        const mediaUrl = String(image);
+
         await this.ctx.editMessageMedia(
           {
             type: 'photo',
-            media: image,
+            media: mediaUrl,
             caption: text,
             parse_mode: 'MarkdownV2',
           },

@@ -25,8 +25,8 @@ export class EmployeeProdfileService {
   ) {
     const prefix = process === 'IN_WORK' ? 'work' : 'done';
 
-    const currentIndex = Number(
-      await this.redis.get(getRedisKeys('currentIndex_employee', prefix, ctx.chat.id)),
+    const redisIndex = await this.redis.get(
+      getRedisKeys('currentIndex_employee', prefix, ctx.chat.id),
     );
     const user_id = await this.redis.get(getRedisKeys('user_id', ctx.chat.id));
     const orders = await this.orderService.findManyByParameter({
@@ -34,6 +34,13 @@ export class EmployeeProdfileService {
       process: [process],
       user_id: user_id,
     });
+
+    // Проверяем, что индекс валидный
+    let currentIndex = redisIndex ? Number(redisIndex) : 0;
+    if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= orders.length) {
+      currentIndex = 0;
+      await this.redis.set(getRedisKeys('currentIndex_employee', prefix, ctx.chat.id), 0);
+    }
     const listManager = new ListManager(
       this.redis,
       orders,
