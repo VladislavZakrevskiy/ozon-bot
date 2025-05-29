@@ -51,7 +51,12 @@ export class AdminProfileService {
           ],
         ],
         getText: (order) => getDefaultText(order, 'char'),
-        getImage: async (order) => order.image_urls[0],
+        getImage: async (order) => {
+          // Проверяем, что URL существует и преобразуем его в строку
+          return order.image_urls && order.image_urls.length > 0
+            ? String(order.image_urls[0])
+            : 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
+        },
       },
       ctx,
       process_type,

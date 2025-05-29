@@ -100,14 +100,24 @@ export class ListManager<T> {
     };
 
     if (image) {
-      await this.ctx.replyWithPhoto(
-        { url: image },
-        {
-          caption: text,
-          parse_mode: 'MarkdownV2',
+      try {
+        // Отправляем фото напрямую с URL
+        await this.ctx.replyWithPhoto(
+          { url: String(image) },
+          {
+            caption: text,
+            parse_mode: 'MarkdownV2',
+            reply_markup: inlineKeyboard,
+          },
+        );
+      } catch (uploadError) {
+        console.error('Ошибка при отправке изображения:', uploadError);
+        // Если не удалось отправить изображение, отправляем текстовое сообщение
+        await this.ctx.reply(text, {
           reply_markup: inlineKeyboard,
-        },
-      );
+          parse_mode: 'MarkdownV2',
+        });
+      }
     } else {
       await this.ctx.reply(text, {
         reply_markup: inlineKeyboard,
@@ -142,20 +152,40 @@ export class ListManager<T> {
     try {
       if (image) {
         console.log(image);
-        // Преобразуем image в строку, независимо от его типа
-        const mediaUrl = String(image);
 
-        await this.ctx.editMessageMedia(
-          {
-            type: 'photo',
-            media: mediaUrl,
-            caption: text,
+        try {
+          // Сначала пробуем отправить новое сообщение с фото, чтобы получить file_id
+          const sentMessage = await this.ctx.telegram.sendPhoto(
+            this.ctx.chat.id,
+            { url: String(image) },
+            { caption: 'Временное сообщение' },
+          );
+
+          // Удаляем временное сообщение
+          await this.ctx.telegram.deleteMessage(this.ctx.chat.id, sentMessage.message_id);
+
+          // Используем полученный file_id для редактирования сообщения
+          const fileId = sentMessage.photo[sentMessage.photo.length - 1].file_id;
+
+          await this.ctx.editMessageMedia(
+            {
+              type: 'photo',
+              media: fileId, // Используем file_id вместо URL
+              caption: text,
+              parse_mode: 'MarkdownV2',
+            },
+            {
+              reply_markup: inlineKeyboard,
+            },
+          );
+        } catch (uploadError) {
+          console.error('Ошибка при загрузке изображения:', uploadError);
+          // Если не удалось загрузить изображение, отправляем текстовое сообщение
+          await this.ctx.editMessageText(text, {
             parse_mode: 'MarkdownV2',
-          },
-          {
             reply_markup: inlineKeyboard,
-          },
-        );
+          });
+        }
       } else {
         await this.ctx.editMessageText(text, {
           parse_mode: 'MarkdownV2',

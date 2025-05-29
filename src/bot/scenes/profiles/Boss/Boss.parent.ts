@@ -42,7 +42,10 @@ export class BossParent {
           [{ text: 'Расчитать заработную плату', callback_data: 'admin_give_money' }],
         ],
         getText: (user) => getDefaultText(user, 'char'),
-        getImage: async (user) => (await getTelegramImage(ctx, user.tg_user_id)).href,
+        getImage: async (user) => {
+          const photoUrl = await getTelegramImage(ctx, user.tg_user_id);
+          return photoUrl.toString(); // Преобразуем URL в строку
+        },
       },
       ctx,
       type,
@@ -85,7 +88,12 @@ export class BossParent {
           ],
         ],
         getText: (order) => getDefaultText(order, 'char'),
-        getImage: async (order) => order.image_urls[0],
+        getImage: async (order) => {
+          // Проверяем, что URL существует и преобразуем его в строку
+          return order.image_urls && order.image_urls.length > 0
+            ? String(order.image_urls[0])
+            : 'https://cdn-icons-png.flaticon.com/512/2830/2830524.png';
+        },
       },
       ctx,
       process_type,
