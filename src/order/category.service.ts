@@ -16,8 +16,7 @@ export class CategoryService {
     for (const category of categories) {
       let is_find = false;
       for (const signature of category.signatures) {
-        const cleanName = productName.split(' v')[0];
-        if (cleanName.includes(signature)) {
+        if (productName.toLowerCase().startsWith(signature.toLowerCase())) {
           is_find = true;
           find_category = category;
           break;
