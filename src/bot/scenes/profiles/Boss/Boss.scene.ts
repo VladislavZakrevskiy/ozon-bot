@@ -41,7 +41,7 @@ export class BossProfileService extends BossParent {
             [
               {
                 text: 'Все возвраты',
-                web_app: { url: `${process.env.WEBAPP_URL}/add-return` },
+                web_app: { url: `${process.env.WEBAPP_URL}/find` },
               },
             ],
           ],
