@@ -17,7 +17,7 @@ export class OrderService {
 
   async getOrdersOnReturns(name: string, not_id: string) {
     const return_candidates = await this.prisma.order.findMany({
-      where: { AND: { name, process: 'RETURN' }, NOT: { id: not_id } },
+      where: { AND: { name, proccess: 'RETURN' }, NOT: { id: not_id } },
     });
 
     return return_candidates;
