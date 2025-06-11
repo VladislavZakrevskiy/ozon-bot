@@ -37,7 +37,7 @@ export class BossParent {
               web_app: (user) => ({ url: `${process.env.WEBAPP_URL}/updateUser/${user.id}` }),
             },
           ],
-          [{ text: 'Уволить', callback_data: 'admin_dismiss_employee' }],
+          [{ text: 'Ограничить доступ', callback_data: 'admin_dismiss_employee' }],
           [{ text: 'Расчитать заработную плату', callback_data: 'admin_give_money' }],
         ],
         getText: (user) => getDefaultText(user, 'char'),

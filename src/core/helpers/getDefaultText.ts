@@ -61,7 +61,7 @@ Email: ${user.login}
 Номер телефона: ${user.phone_number}
 Подтвержден: ${user.isApproved ? 'Да' : 'Нет'}
 
-${user.money ? `Заработанные деньги: ${user.money}` : ''}
+${user.money ? `Сумма очков: ${user.money}` : ''}
 ${user.count_date ? `Последний перерасчет: ${user.count_date}` : ''}
 ${user.count_money ? `Сумма последнего перерасчета: ${user.count_money}` : ''}
 `;
@@ -74,7 +74,7 @@ Email: ${user.login}
 Номер телефона: ${user.phone_number}
 Подтвержден: ${user.isApproved ? 'Да' : 'Нет'}
 
-${user.money ? `Деньги: ${user.money}` : ''}
+${user.money ? `Производительность: ${user.money} очков` : ''}
 ${user.count_date ? `Последний перерасчет: ${user.count_date}` : ''}
 ${user.count_money ? `Сумма последнего перерасчета: ${user.count_money}` : ''}
 `;
