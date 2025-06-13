@@ -38,7 +38,7 @@ export class BossParent {
             },
           ],
           [{ text: 'Ограничить доступ', callback_data: 'admin_dismiss_employee' }],
-          [{ text: 'Расчитать заработную плату', callback_data: 'admin_give_money' }],
+          [{ text: 'Расчитать очки производительности', callback_data: 'admin_give_money' }],
         ],
         getText: (user) => getDefaultText(user, 'char'),
         getImage: async (user) => {
