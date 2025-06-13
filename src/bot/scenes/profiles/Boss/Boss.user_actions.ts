@@ -62,7 +62,7 @@ export class BossUserActions extends BossParent {
     const { listManager, users } = await this.getUsersListManager(ctx, EmployeeLevel.ADMIN);
 
     if (users.length === 0) {
-      await ctx.reply('Админов нет(');
+      await ctx.reply('Админов нет');
       return;
     }
 
@@ -74,7 +74,7 @@ export class BossUserActions extends BossParent {
     const { listManager, users } = await this.getUsersListManager(ctx, EmployeeLevel.EMPLOYEE);
 
     if (users.length === 0) {
-      await ctx.reply('Сотрудников нет(');
+      await ctx.reply('Сотрудников нет');
       return;
     }
 
@@ -128,10 +128,10 @@ export class BossUserActions extends BossParent {
 
     await ctx.telegram.sendMessage(
       currentUser.tg_chat_id,
-      'К сожалению, вы уволены, расчет произведен',
+      'Доступ к системе ограничен',
     );
 
-    await ctx.replyWithMarkdownV2(`Уволен данный сотрудник:
+    await ctx.replyWithMarkdownV2(`Доступ ограничен пользователю:
 ${getDefaultText(currentUser, 'char')}`);
   }
 
